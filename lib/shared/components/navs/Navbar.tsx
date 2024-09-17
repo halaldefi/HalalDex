@@ -112,7 +112,7 @@ function NavActions() {
         },
         {
           el: (
-            <Button size="md" px={7} as={NextLink} href="/pools" prefetch={true} variant="primary">
+            <Button size="md" px={7} as={NextLink} href="/swap" prefetch={true} variant="primary">
               Launch app
             </Button>
           ),
