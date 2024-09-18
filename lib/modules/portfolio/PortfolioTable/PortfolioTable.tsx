@@ -1,11 +1,9 @@
 import { PaginatedTable } from '@/lib/shared/components/tables/PaginatedTable'
 import { usePortfolio } from '../PortfolioProvider'
 import { PortfolioTableHeader } from './PortfolioTableHeader'
-import { PortfolioTableRow } from './PortfolioTableRow'
 import { Card, Center, Checkbox, HStack, Heading, Stack, Text } from '@chakra-ui/react'
 import { useMemo, useState } from 'react'
 import { GqlPoolOrderBy } from '@/lib/shared/services/api/generated/graphql'
-import { useVebalBoost } from '../../vebal/useVebalBoost'
 import FadeInOnView from '@/lib/shared/components/containers/FadeInOnView'
 import {
   getUserTotalBalanceUsd,
@@ -87,8 +85,6 @@ export function PortfolioTable() {
 
   const hasTinyBalances = portfolioData.pools.some(pool => hasTinyBalance(pool, minUsdBalance))
 
-  const { veBalBoostMap } = useVebalBoost(portfolioData.stakedPools)
-
   const [currentSortingObj, setCurrentSortingObj] = useState<PortfolioSortingData>({
     id: 'staking',
     desc: true,
@@ -106,12 +102,6 @@ export function PortfolioTable() {
         return currentSortingObj.desc
           ? bStakingWeight - aStakingWeight
           : aStakingWeight - bStakingWeight
-      }
-
-      if (currentSortingObj.id === 'vebal') {
-        const aVebalBoost = Number(veBalBoostMap?.[a.id] || 0)
-        const bVebalBoost = Number(veBalBoostMap?.[b.id] || 0)
-        return currentSortingObj.desc ? bVebalBoost - aVebalBoost : aVebalBoost - bVebalBoost
       }
 
       if (currentSortingObj.id === 'liquidity') {
@@ -132,13 +122,7 @@ export function PortfolioTable() {
 
       return 0
     })
-  }, [
-    portfolioData?.pools,
-    expandedPools,
-    currentSortingObj.id,
-    currentSortingObj.desc,
-    veBalBoostMap,
-  ])
+  }, [portfolioData?.pools, expandedPools, currentSortingObj.id, currentSortingObj.desc])
 
   return (
     <FadeInOnView>
@@ -164,15 +148,8 @@ export function PortfolioTable() {
                   {...rowProps}
                 />
               )}
-              renderTableRow={(item: ExpandedPoolInfo, index) => {
-                return (
-                  <PortfolioTableRow
-                    keyValue={index}
-                    pool={item}
-                    veBalBoostMap={veBalBoostMap}
-                    {...rowProps}
-                  />
-                )
+              renderTableRow={() => {
+                return <div>test</div>
               }}
               showPagination={false}
               paginationProps={null}

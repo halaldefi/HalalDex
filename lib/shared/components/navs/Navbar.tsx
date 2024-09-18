@@ -11,7 +11,6 @@ import RecentTransactions from '../other/RecentTransactions'
 import { isDev, isStaging } from '@/lib/config/app.config'
 import { staggeredFadeIn, fadeIn } from '@/lib/shared/utils/animations'
 import { motion, useMotionTemplate, useMotionValue, useScroll, useTransform } from 'framer-motion'
-import { VeBalLink } from '@/lib/modules/vebal/VebalRedirectModal'
 import { MobileNav } from './MobileNav'
 import { useNav } from './useNav'
 import { useEffect, useMemo, useState } from 'react'
@@ -62,9 +61,6 @@ function NavLinks({ ...props }: BoxProps) {
           </Link>
         </Box>
       ))}
-      <Box as={motion.div} variants={fadeIn}>
-        <VeBalLink />
-      </Box>
       {(isDev || isStaging) && (
         <Box as={motion.div} variants={fadeIn}>
           <Link

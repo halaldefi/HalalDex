@@ -48,7 +48,6 @@ import { InfoOutlineIcon } from '@chakra-ui/icons'
 import { GqlPoolStakingType } from '@/lib/shared/services/api/generated/graphql'
 import { ArrowUpRight } from 'react-feather'
 import { getChainId } from '@/lib/config/app.config'
-import { VeBalLink } from '../../vebal/VebalRedirectModal'
 import {
   PartnerRedirectModal,
   RedirectPartner,
@@ -182,9 +181,6 @@ export default function PoolMyLiquidity() {
 
   const stakedBalance = calcStakedBalanceUsd(pool, getStakingType(activeTab.value))
   const unstakedBalance = getUserWalletBalanceUsd(pool)
-
-  const lockBtnText =
-    bn(stakedBalance).gt(0) && bn(unstakedBalance).isEqualTo(0) ? 'Extend lock' : 'Lock'
 
   function getTotalBalanceUsd() {
     if (!isConnected || isConnecting) return 0
@@ -362,51 +358,40 @@ export default function PoolMyLiquidity() {
             <Text variant="secondary" opacity="0.25" px={{ base: '0', sm: 'ms' }}>
               |
             </Text>
-            {isVeBal ? (
-              <VeBalLink
+            <>
+              <Button
+                onClick={() => router.push(`${pathname}/stake`)}
+                variant={canStake && hasUnstakedBalance ? 'secondary' : 'disabled'}
+                isDisabled={!(canStake && hasUnstakedBalance)}
                 flex="1"
-                triggerEl={
-                  <Button w="100%" variant="secondary">
-                    {lockBtnText}
-                  </Button>
-                }
-              />
-            ) : (
-              <>
-                <Button
-                  onClick={() => router.push(`${pathname}/stake`)}
-                  variant={canStake && hasUnstakedBalance ? 'secondary' : 'disabled'}
-                  isDisabled={!(canStake && hasUnstakedBalance)}
-                  flex="1"
-                  maxW="120px"
-                >
-                  Stake
-                </Button>
-                {shouldMigrateStake(pool) ? (
-                  <Tooltip label={migrateStakeTooltipLabel}>
-                    <Button
-                      onClick={() => router.push(`${pathname}/migrate-stake`)}
-                      variant="secondary"
-                      rightIcon={<InfoOutlineIcon fontSize="sm" />}
-                      flex="1"
-                      maxW="120px"
-                    >
-                      Migrate stake
-                    </Button>
-                  </Tooltip>
-                ) : (
+                maxW="120px"
+              >
+                Stake
+              </Button>
+              {shouldMigrateStake(pool) ? (
+                <Tooltip label={migrateStakeTooltipLabel}>
                   <Button
-                    onClick={() => router.push(`${pathname}/unstake`)}
-                    variant={hasGaugeStakedBalance ? 'tertiary' : 'disabled'}
-                    isDisabled={!hasGaugeStakedBalance}
+                    onClick={() => router.push(`${pathname}/migrate-stake`)}
+                    variant="secondary"
+                    rightIcon={<InfoOutlineIcon fontSize="sm" />}
                     flex="1"
                     maxW="120px"
                   >
-                    Unstake
+                    Migrate stake
                   </Button>
-                )}
-              </>
-            )}
+                </Tooltip>
+              ) : (
+                <Button
+                  onClick={() => router.push(`${pathname}/unstake`)}
+                  variant={hasGaugeStakedBalance ? 'tertiary' : 'disabled'}
+                  isDisabled={!hasGaugeStakedBalance}
+                  flex="1"
+                  maxW="120px"
+                >
+                  Unstake
+                </Button>
+              )}
+            </>
           </HStack>
         </VStack>
       </VStack>

@@ -21,7 +21,6 @@ import { BalancerLogoType } from '../imgs/BalancerLogoType'
 import { useNav } from './useNav'
 import NextLink from 'next/link'
 import { useRouter } from 'next/navigation'
-import { VeBalLink } from '@/lib/modules/vebal/VebalRedirectModal'
 
 function NavLinks({ onClick }: { onClick?: () => void }) {
   const { appLinks, linkColorFor } = useNav()
@@ -42,7 +41,6 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
           {link.label}
         </Link>
       ))}
-      <VeBalLink fontSize="xl" />
     </VStack>
   )
 }

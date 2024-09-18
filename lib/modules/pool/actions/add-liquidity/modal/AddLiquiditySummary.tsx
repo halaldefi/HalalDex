@@ -14,7 +14,6 @@ import { AddLiquidityReceiptResult } from '@/lib/modules/transactions/transactio
 import { BalAlert } from '@/lib/shared/components/alerts/BalAlert'
 import { StakingOptions } from './StakingOptions'
 import { isVebalPool } from '../../../pool.helpers'
-import { VebalRedirectModal } from '@/lib/modules/vebal/VebalRedirectModal'
 import { AnimateHeightChange } from '@/lib/shared/components/modals/AnimatedModalBody'
 import { CardPopAnim } from '@/lib/shared/components/animations/CardPopAnim'
 import { useMemo } from 'react'
@@ -108,11 +107,6 @@ export function AddLiquiditySummary({
                   Lock to get veBAL
                 </Button>
               </VStack>
-
-              <VebalRedirectModal
-                isOpen={vebalRedirectModal.isOpen}
-                onClose={vebalRedirectModal.onClose}
-              />
             </Card>
           )}
         </CardPopAnim>

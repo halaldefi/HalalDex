@@ -22,9 +22,7 @@ import { ArrowUpRight } from 'react-feather'
 import { PoolEventItem } from '../usePoolEvents'
 import { calcTotalStakedBalance, getUserTotalBalance } from '../user-balance.helpers'
 import { fNum, bn } from '@/lib/shared/utils/numbers'
-import { useVebalBoost } from '@/lib/modules/vebal/useVebalBoost'
 import { isEmpty } from 'lodash'
-import { isVebalPool } from '../pool.helpers'
 
 type PoolEventRowProps = {
   poolEvent: PoolEventItem
@@ -117,10 +115,6 @@ export default function PoolUserEvents({
   const [poolEvents, setPoolEvents] = useState<PoolEventItem[]>([])
   const { toCurrency } = useCurrency()
   const { getBlockExplorerTxUrl } = useBlockExplorer(chain)
-  const { veBalBoostMap } = useVebalBoost([pool])
-
-  const isVeBal = isVebalPool(pool.id)
-  const showBoostValue = !isVeBal
 
   // keep this card the same height as the 'My liquidity' section
   useLayoutEffect(() => {
@@ -137,10 +131,6 @@ export default function PoolUserEvents({
   }, [userPoolEvents, isLoading])
 
   function getShareTitle() {
-    if (isVeBal) {
-      return 'locked'
-    }
-
     return 'staked'
   }
 
@@ -158,16 +148,6 @@ export default function PoolUserEvents({
       return fNum('stakedPercentage', ratio)
     }
   }, [pool])
-
-  const boost = useMemo(() => {
-    const boost = veBalBoostMap[pool.id]
-
-    if (!boost || boost === '1') {
-      return '1.00'
-    }
-
-    return fNum('boost', bn(boost))
-  }, [veBalBoostMap, pool])
 
   return (
     <Card h={height}>
@@ -225,16 +205,6 @@ export default function PoolUserEvents({
             <Text variant="secondary" fontSize="0.85rem">
               {`${stakedPercentage} ${getShareTitle()}`}
             </Text>
-            {showBoostValue && (
-              <>
-                <Text variant="secondary" fontSize="0.85rem">
-                  &middot;
-                </Text>
-                <Text variant="secondary" fontSize="0.85rem">
-                  {`${boost}x boost`}
-                </Text>
-              </>
-            )}
           </HStack>
         </VStack>
       )}
