@@ -15,6 +15,7 @@ import { UserAccountProvider } from './UserAccountProvider'
 import { PropsWithChildren } from 'react'
 import { WagmiConfig } from './WagmiConfig'
 import { useIsMounted } from '@/lib/shared/hooks/useIsMounted'
+import { ThirdwebProvider } from 'thirdweb/react'
 
 export function Web3Provider({
   children,
@@ -97,23 +98,25 @@ export function Web3Provider({
 
   return (
     <ReactQueryClientProvider>
-      <WagmiProvider config={wagmiConfig}>
-        <RainbowKitProvider theme={customTheme} avatar={CustomAvatar}>
-          <UserAccountProvider>
-            <UserSettingsProvider
-              initCurrency={undefined}
-              initSlippage={undefined}
-              initEnableSignatures={undefined}
-              initPoolListView={undefined}
-              initAcceptedPolicies={undefined}
-            >
-              {children}
-              <BlockedAddressModal />
-              <AcceptPoliciesModal />
-            </UserSettingsProvider>
-          </UserAccountProvider>
-        </RainbowKitProvider>
-      </WagmiProvider>
+      <ThirdwebProvider>
+        <WagmiProvider config={wagmiConfig}>
+          <RainbowKitProvider theme={customTheme} avatar={CustomAvatar}>
+            <UserAccountProvider>
+              <UserSettingsProvider
+                initCurrency={undefined}
+                initSlippage={undefined}
+                initEnableSignatures={undefined}
+                initPoolListView={undefined}
+                initAcceptedPolicies={undefined}
+              >
+                {children}
+                <BlockedAddressModal />
+                <AcceptPoliciesModal />
+              </UserSettingsProvider>
+            </UserAccountProvider>
+          </RainbowKitProvider>
+        </WagmiProvider>
+      </ThirdwebProvider>
     </ReactQueryClientProvider>
   )
 }

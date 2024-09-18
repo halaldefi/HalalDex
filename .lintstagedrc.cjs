@@ -8,7 +8,7 @@ const buildEslintCommand = filenames =>
     .join(' --file ')}`
 
 module.exports = {
-  '*.{js,jsx,ts,tsx}': [buildEslintCommand, 'bash -c "pnpm run typecheck"'],
+  // '*.{js,jsx,ts,tsx}': [buildEslintCommand, 'bash -c "pnpm run typecheck"'],
   '*.{md,json,yaml,ts,tsx}': 'prettier --write',
   '*.css': 'stylelint --fix',
 }

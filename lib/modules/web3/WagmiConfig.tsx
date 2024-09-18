@@ -44,5 +44,4 @@ export const wagmiConfig = createConfig({
   chains,
   transports,
   connectors,
-  ssr: true,
 })

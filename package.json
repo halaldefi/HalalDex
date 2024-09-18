@@ -81,6 +81,7 @@
     "react-syntax-highlighter": "^15.5.0",
     "react-use-measure": "^2.1.1",
     "react-virtuoso": "^4.7.1",
+    "thirdweb": "^5.57.0",
     "tinycolor2": "^1.6.0",
     "use-debounce": "^10.0.0",
     "use-sound": "^4.0.1",

@@ -3,7 +3,6 @@
 import NextLink from 'next/link'
 import DarkModeToggle from '../btns/DarkModeToggle'
 import { Box, HStack, BoxProps, Link, Button } from '@chakra-ui/react'
-import { ConnectWallet } from '@/lib/modules/web3/ConnectWallet'
 import { BalancerLogo } from '../imgs/BalancerLogo'
 import { BalancerLogoType } from '../imgs/BalancerLogoType'
 import { UserSettings } from '@/lib/modules/user/settings/UserSettings'
@@ -16,6 +15,7 @@ import { useNav } from './useNav'
 import { useEffect, useMemo, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useUserAccount } from '@/lib/modules/web3/UserAccountProvider'
+import { ThirdwebConnectButton } from '@/lib/modules/web3/ThirdwebConnectButton'
 
 type Props = {
   leftSlot?: React.ReactNode
@@ -131,7 +131,7 @@ function NavActions() {
         display: { base: 'none', lg: 'block' },
       },
       {
-        el: <ConnectWallet />,
+        el: <ThirdwebConnectButton />,
         display: { base: 'block', lg: 'block' },
       },
       {
