@@ -41,7 +41,6 @@ export function useSimulateSwapQuery({
   const queryFn = async (): Promise<SimulateSwapResponse> => {
     const tokenInInfo = getToken(tokenIn, chain)
     const tokenOutInfo = getToken(tokenOut, chain)
-
     if (!tokenInInfo || !tokenOutInfo) {
       throw new Error('Token information not found')
     }
@@ -65,10 +64,12 @@ export function useSimulateSwapQuery({
     const response = await fetch(`/api/price?${qs.stringify(params)}`)
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
     const data = await response.json()
-    
+
     return {
       ...data,
-      swapType
+      swapType,
+      tokenInDecimals: tokenInInfo.decimals,
+      tokenOutDecimals: tokenOutInfo.decimals,
     }
   }
 
