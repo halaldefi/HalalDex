@@ -2,7 +2,6 @@
 
 import { TokenInput } from '@/lib/modules/tokens/TokenInput/TokenInput'
 import { GqlChain, GqlToken } from '@/lib/shared/services/api/generated/graphql'
-import { HumanAmount } from '@balancer/sdk'
 import {
   Card,
   Center,
@@ -28,51 +27,46 @@ import { ChainSelect } from '../chains/ChainSelect'
 import { CheckCircle, Link, Repeat } from 'react-feather'
 import { SwapRate } from './SwapRate'
 import { SwapDetails } from './SwapDetails'
-import { capitalize } from 'lodash'
-import { motion, easeOut } from 'framer-motion'
 import FadeInOnView from '@/lib/shared/components/containers/FadeInOnView'
 import { ErrorAlert } from '@/lib/shared/components/errors/ErrorAlert'
 import { useIsMounted } from '@/lib/shared/hooks/useIsMounted'
-import { parseSwapError } from './swap.helpers'
-import { useUserAccount } from '../web3/UserAccountProvider'
 import { ConnectWallet } from '../web3/ConnectWallet'
 import { SafeAppAlert } from '@/lib/shared/components/alerts/SafeAppAlert'
+import { useActiveAccount } from 'thirdweb/react'
 
 export function SwapForm() {
   const {
     tokenIn,
     tokenOut,
     selectedChain,
+    price,
     tokens,
-    tokenSelectKey,
+    quote,
     isDisabled,
     disabledReason,
     previewModalDisclosure,
-    simulationQuery,
-    swapAction,
-    swapTxHash,
-    transactionSteps,
     setSelectedChain,
     setTokenInAmount,
     setTokenOutAmount,
-    setTokenSelectKey,
     setTokenIn,
     setTokenOut,
     switchTokens,
     setNeedsToAcceptHighPI,
     resetSwapAmounts,
-    replaceUrlPath,
+    fetchPrice,
+    fetchQuote,
   } = useSwap()
+
   const [copiedDeepLink, setCopiedDeepLink] = useState(false)
   const tokenSelectDisclosure = useDisclosure()
+  const [tokenSelectKey, setTokenSelectKey] = useState<'tokenIn' | 'tokenOut'>('tokenIn')
   const nextBtn = useRef(null)
   const finalRefTokenIn = useRef(null)
   const finalRefTokenOut = useRef(null)
   const isMounted = useIsMounted()
-  const { isConnected } = useUserAccount()
+  const activeAccount = useActiveAccount()
 
-  const isLoadingSwaps = simulationQuery.isLoading
-  const isLoading = isLoadingSwaps || !isMounted
+  const isLoading = !price || !quote
   const loadingText = isLoading ? 'Fetching swap...' : undefined
 
   function copyDeepLink() {
@@ -87,23 +81,17 @@ export function SwapForm() {
       setTokenIn(token.address as Address)
     } else if (tokenSelectKey === 'tokenOut') {
       setTokenOut(token.address as Address)
-    } else {
-      console.error('Unhandled token select key', tokenSelectKey)
     }
   }
 
-  function openTokenSelectModal(tokenSelectKey: 'tokenIn' | 'tokenOut') {
-    setTokenSelectKey(tokenSelectKey)
+  function openTokenSelectModal(key: 'tokenIn' | 'tokenOut') {
+    setTokenSelectKey(key)
     tokenSelectDisclosure.onOpen()
   }
 
   function onModalClose() {
     previewModalDisclosure.onClose()
-    if (swapTxHash) {
-      resetSwapAmounts()
-      replaceUrlPath()
-      transactionSteps.resetTransactionSteps()
-    }
+    resetSwapAmounts()
   }
 
   return (
@@ -118,14 +106,13 @@ export function SwapForm() {
       >
         <Card rounded="xl">
           <CardHeader as={HStack} w="full" justify="space-between" zIndex={11}>
-            <span>{capitalize(swapAction)}</span>
+            <span>Swap</span>
             <HStack>
               <Tooltip label={copiedDeepLink ? 'Copied!' : 'Copy swap link'}>
                 <Button variant="tertiary" size="sm" color="grayText" onClick={copyDeepLink}>
                   {copiedDeepLink ? <CheckCircle size={16} /> : <Link size={16} />}
                 </Button>
               </Tooltip>
-
               <TransactionSettings size="sm" />
             </HStack>
           </CardHeader>
@@ -145,10 +132,10 @@ export function SwapForm() {
                   address={tokenIn.address}
                   chain={selectedChain}
                   value={tokenIn.amount}
-                  onChange={e => setTokenInAmount(e.currentTarget.value as HumanAmount)}
+                  onChange={e => setTokenInAmount(e.currentTarget.value)}
                   toggleTokenSelect={() => openTokenSelectModal('tokenIn')}
                 />
-                <Box position="relative" border="red 1px solid">
+                <Box position="relative">
                   <IconButton
                     position="absolute"
                     variant="tertiary"
@@ -169,40 +156,28 @@ export function SwapForm() {
                   address={tokenOut.address}
                   chain={selectedChain}
                   value={tokenOut.amount}
-                  onChange={e => setTokenOutAmount(e.currentTarget.value as HumanAmount)}
+                  onChange={e => setTokenOutAmount(e.currentTarget.value)}
                   toggleTokenSelect={() => openTokenSelectModal('tokenOut')}
                   hasPriceImpact
                   disableBalanceValidation
-                  isLoadingPriceImpact={
-                    simulationQuery.isLoading || !simulationQuery.data || !tokenIn.amount
-                  }
+                  isLoadingPriceImpact={isLoading}
                 />
               </VStack>
-              {!!simulationQuery.data && (
-                <motion.div
-                  style={{ width: '100%', transformOrigin: 'top' }}
-                  initial={{ opacity: 0, scaleY: 0.9 }}
-                  animate={{ opacity: 1, scaleY: 1 }}
-                  transition={{ duration: 0.3, ease: easeOut }}
-                >
-                  <PriceImpactAccordion
-                    setNeedsToAcceptPIRisk={setNeedsToAcceptHighPI}
-                    accordionButtonComponent={<SwapRate />}
-                    accordionPanelComponent={<SwapDetails />}
-                    isDisabled={!simulationQuery.data}
-                  />
-                </motion.div>
+              {price && quote && (
+                <PriceImpactAccordion
+                  setNeedsToAcceptPIRisk={setNeedsToAcceptHighPI}
+                  accordionButtonComponent={<SwapRate />}
+                  accordionPanelComponent={<SwapDetails />}
+                  isDisabled={isLoading}
+                />
               )}
-
-              {simulationQuery.isError && (
-                <ErrorAlert title="Error fetching swap">
-                  {parseSwapError(simulationQuery.error?.message)}
-                </ErrorAlert>
+              {!price && !quote && (
+                <ErrorAlert title="Error fetching swap">Unable to fetch price and quote</ErrorAlert>
               )}
             </VStack>
           </CardBody>
           <CardFooter>
-            {isConnected ? (
+            {activeAccount ? (
               <Tooltip label={isDisabled ? disabledReason : ''}>
                 <Button
                   ref={nextBtn}
@@ -232,7 +207,7 @@ export function SwapForm() {
       <TokenSelectModal
         finalFocusRef={tokenSelectKey === 'tokenIn' ? finalRefTokenIn : finalRefTokenOut}
         chain={selectedChain}
-        tokens={tokens}
+        tokens={tokens} // You'll need to provide the list of tokens here
         currentToken={tokenSelectKey === 'tokenIn' ? tokenIn.address : tokenOut.address}
         isOpen={tokenSelectDisclosure.isOpen}
         onOpen={tokenSelectDisclosure.onOpen}

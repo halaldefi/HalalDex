@@ -5,8 +5,8 @@ import { getNetworkConfig } from '@/lib/config/app.config'
 import { GqlChain, GqlSorSwapType, GqlToken } from '@/lib/shared/services/api/generated/graphql'
 import { useMandatoryContext } from '@/lib/shared/utils/contexts'
 import { ApolloClient, useApolloClient, useReactiveVar } from '@apollo/client'
-import { PropsWithChildren, createContext, useEffect, useMemo, useState } from 'react'
-import { Address, Hash, isAddress, parseUnits } from 'viem'
+import { PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { Address, formatUnits, Hash, isAddress, parseUnits } from 'viem'
 import { emptyAddress } from '../web3/contracts/wagmi-helpers'
 import { useUserAccount } from '../web3/UserAccountProvider'
 import { LABELS } from '@/lib/shared/labels'
@@ -48,6 +48,17 @@ import { usePriceImpact } from '../price-impact/PriceImpactProvider'
 import { calcMarketPriceImpact } from '../price-impact/price-impact.utils'
 import { isAuraBalSwap } from './swap.helpers'
 import { AuraBalSwapHandler } from './handlers/AuraBalSwap.handler'
+import {
+  AFFILIATE_FEE,
+  BNB_TOKENS_BY_SYMBOL,
+  FEE_RECIPIENT,
+  MAINNET_TOKENS_BY_SYMBOL,
+  NATIVE_TOKEN_ADDRESS,
+  POLYGON_TOKENS_BY_SYMBOL,
+} from './constant'
+import { useActiveAccount, useActiveWallet, useActiveWalletChain } from 'thirdweb/react'
+import { toTokens } from 'thirdweb'
+import qs from 'qs'
 
 export type UseSwapResponse = ReturnType<typeof _useSwap>
 export const SwapContext = createContext<UseSwapResponse | null>(null)
@@ -58,10 +69,8 @@ export type PathParams = {
   tokenOut?: string
   amountIn?: string
   amountOut?: string
-  // When urlTxHash is present the rest of the params above are not used
   urlTxHash?: Hash
 }
-
 function selectSwapHandler(
   tokenInAddress: Address,
   tokenOutAddress: Address,
@@ -105,10 +114,14 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   const [needsToAcceptHighPI, setNeedsToAcceptHighPI] = useState(false)
   const [tokenSelectKey, setTokenSelectKey] = useState<'tokenIn' | 'tokenOut'>('tokenIn')
   const [initUserChain, setInitUserChain] = useState<GqlChain | undefined>(undefined)
+  const [price, setPrice] = useState<any>(null)
+  const [quote, setQuote] = useState<any>(null)
 
-  const { isConnected } = useUserAccount()
-  const { chain: walletChain } = useNetworkConfig()
-  const { getToken, getTokensByChain, usdValueForToken } = useTokens()
+  const activeWallet = useActiveWallet()
+  const activeChain = useActiveWalletChain()
+  const activeAccount = useActiveAccount()
+
+  const { getToken, getTokensByChain, usdValueForToken, priceFor } = useTokens()
   const { tokens, setTokens } = useTokenBalances()
   const { hasValidationErrors } = useTokenInputsValidation()
   const { setPriceImpact, setPriceImpactLevel } = usePriceImpact()
@@ -116,7 +129,33 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   const networkConfig = getNetworkConfig(swapState.selectedChain)
   const previewModalDisclosure = useDisclosure()
 
+  async function fetchPrice() {
+    const params = {
+      chainId: activeChain?.id,
+      sellToken: swapState.tokenIn.address,
+      buyToken: swapState.tokenOut.address,
+      [swapState.swapType === GqlSorSwapType.ExactIn ? 'sellAmount' : 'buyAmount']:
+        swapState.swapType === GqlSorSwapType.ExactIn
+          ? swapState.tokenIn.scaledAmount.toString()
+          : swapState.tokenOut.scaledAmount.toString(),
+      taker: activeAccount,
+      swapFeeRecipient: FEE_RECIPIENT,
+      swapFeeBps: AFFILIATE_FEE,
+      swapFeeToken: swapState.tokenOut.address,
+      tradeSurplusRecipient: FEE_RECIPIENT,
+    }
+
+    try {
+      const response = await fetch(`/api/price?${qs.stringify(params)}`)
+      const data = await response.json()
+      setPrice(data)
+      handlePriceResponse(data)
+    } catch (error) {
+      console.error('Error fetching price:', error)
+    }
+  }
   const client = useApolloClient()
+
   const handler = useMemo(
     () =>
       selectSwapHandler(
@@ -129,24 +168,9 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
       ),
     [swapState.tokenIn.address, swapState.tokenOut.address, swapState.selectedChain]
   )
-
-  const isTokenInSet = swapState.tokenIn.address !== emptyAddress
-  const isTokenOutSet = swapState.tokenOut.address !== emptyAddress
-
-  const tokenInInfo = getToken(swapState.tokenIn.address, swapState.selectedChain)
-  const tokenOutInfo = getToken(swapState.tokenOut.address, swapState.selectedChain)
-
-  if ((isTokenInSet && !tokenInInfo) || (isTokenOutSet && !tokenOutInfo)) {
-    try {
-      setDefaultTokens()
-    } catch (error) {
-      throw new Error('Token metadata not found')
-    }
-  }
-
-  const tokenInUsd = usdValueForToken(tokenInInfo, swapState.tokenIn.amount)
-  const tokenOutUsd = usdValueForToken(tokenOutInfo, swapState.tokenOut.amount)
-
+  const getSwapAmount = (state: SwapState) =>
+    (state.swapType === GqlSorSwapType.ExactIn ? state.tokenIn.amount : state.tokenOut.amount) ||
+    '0'
   const shouldFetchSwap = (state: SwapState, urlTxHash?: Hash) => {
     if (urlTxHash) return false
     return (
@@ -156,10 +180,6 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
       bn(getSwapAmount(swapState)).gt(0)
     )
   }
-
-  const getSwapAmount = (state: SwapState) =>
-    (state.swapType === GqlSorSwapType.ExactIn ? state.tokenIn.amount : state.tokenOut.amount) ||
-    '0'
 
   const simulationQuery = useSimulateSwapQuery({
     handler,
@@ -172,53 +192,115 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
     },
     enabled: shouldFetchSwap(swapState, urlTxHash),
   })
-
-  function handleSimulationResponse({ returnAmount, swapType }: SimulateSwapResponse) {
-    swapStateVar({
-      ...swapState,
-      swapType,
-    })
-
-    if (swapType === GqlSorSwapType.ExactIn) {
-      setTokenOutAmount(returnAmount, { userTriggered: false })
-    } else {
-      setTokenInAmount(returnAmount, { userTriggered: false })
+  function handlePriceResponse(data: any) {
+    if (data.buyAmount) {
+      const tokenOut = getToken(swapState.tokenOut.address, swapState.selectedChain)
+      if (tokenOut) {
+        swapStateVar({
+          ...swapState,
+          tokenOut: {
+            ...swapState.tokenOut,
+            amount: formatUnits(BigInt(data.buyAmount), tokenOut.decimals),
+            scaledAmount: BigInt(data.buyAmount),
+          },
+        })
+      }
     }
   }
 
+  async function fetchQuote() {
+    const params = {
+      chainId: activeChain?.id,
+      sellToken: swapState.tokenIn.address,
+      buyToken: swapState.tokenOut.address,
+      [swapState.swapType === GqlSorSwapType.ExactIn ? 'sellAmount' : 'buyAmount']:
+        swapState.swapType === GqlSorSwapType.ExactIn
+          ? swapState.tokenIn.scaledAmount.toString()
+          : swapState.tokenOut.scaledAmount.toString(),
+      taker: activeAccount,
+      swapFeeRecipient: FEE_RECIPIENT,
+      swapFeeBps: AFFILIATE_FEE,
+      swapFeeToken: swapState.tokenOut.address,
+      tradeSurplusRecipient: FEE_RECIPIENT,
+    }
+
+    try {
+      const response = await fetch(`/api/quote?${qs.stringify(params)}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      setQuote(data)
+    } catch (error) {
+      console.error('Error fetching quote:', error)
+      // You might want to set an error state here
+    }
+  }
+  useEffect(() => {
+    console.log('Price changed:', price)
+    console.log('Active account:', activeAccount)
+    if (price && activeAccount) {
+      console.log('Fetching quote...')
+      fetchQuote()
+    }
+  }, [price, activeAccount])
+
   function setSelectedChain(_selectedChain: GqlChain) {
-    const defaultTokenState = getDefaultTokenState(_selectedChain)
-    swapStateVar(defaultTokenState)
+    swapStateVar({
+      ...swapState,
+      selectedChain: _selectedChain,
+    })
+    setTokens(getTokensByChain(_selectedChain))
   }
 
   function setTokenIn(tokenAddress: Address) {
-    const isSameAsTokenOut = isSameAddress(tokenAddress, swapState.tokenOut.address)
-
     swapStateVar({
       ...swapState,
       tokenIn: {
         ...swapState.tokenIn,
         address: tokenAddress,
       },
-      tokenOut: isSameAsTokenOut
-        ? { ...swapState.tokenOut, address: emptyAddress }
-        : swapState.tokenOut,
     })
   }
 
   function setTokenOut(tokenAddress: Address) {
-    const isSameAsTokenIn = isSameAddress(tokenAddress, swapState.tokenIn.address)
-
     swapStateVar({
       ...swapState,
       tokenOut: {
         ...swapState.tokenOut,
         address: tokenAddress,
       },
-      tokenIn: isSameAsTokenIn
-        ? { ...swapState.tokenIn, address: emptyAddress }
-        : swapState.tokenIn,
     })
+  }
+
+  function setTokenInAmount(amount: string) {
+    const tokenIn = getToken(swapState.tokenIn.address, swapState.selectedChain)
+    if (tokenIn) {
+      swapStateVar({
+        ...swapState,
+        tokenIn: {
+          ...swapState.tokenIn,
+          amount,
+          scaledAmount: parseUnits(amount, tokenIn.decimals),
+        },
+        swapType: GqlSorSwapType.ExactIn,
+      })
+    }
+  }
+
+  function setTokenOutAmount(amount: string) {
+    const tokenOut = getToken(swapState.tokenOut.address, swapState.selectedChain)
+    if (tokenOut) {
+      swapStateVar({
+        ...swapState,
+        tokenOut: {
+          ...swapState.tokenOut,
+          amount,
+          scaledAmount: parseUnits(amount, tokenOut.decimals),
+        },
+        swapType: GqlSorSwapType.ExactOut,
+      })
+    }
   }
 
   function switchTokens() {
@@ -228,354 +310,110 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
       tokenOut: swapState.tokenIn,
       swapType: GqlSorSwapType.ExactIn,
     })
-    setTokenInAmount('', { userTriggered: false })
-    setTokenOutAmount('', { userTriggered: false })
-  }
-
-  function setTokenInAmount(
-    amount: string,
-    { userTriggered = true }: { userTriggered?: boolean } = {}
-  ) {
-    const state = swapStateVar()
-    const newState = {
-      ...state,
-      tokenIn: {
-        ...state.tokenIn,
-        amount,
-        scaledAmount: scaleTokenAmount(amount, tokenInInfo),
-      },
-    }
-
-    if (userTriggered) {
-      swapStateVar({
-        ...newState,
-        swapType: GqlSorSwapType.ExactIn,
-      })
-      setTokenOutAmount('', { userTriggered: false })
-    } else {
-      // Sometimes we want to set the amount without triggering a fetch or
-      // swapType change, like when we populate the amount after a change from the other input.
-      swapStateVar(newState)
-    }
-  }
-
-  function setTokenOutAmount(
-    amount: string,
-    { userTriggered = true }: { userTriggered?: boolean } = {}
-  ) {
-    const state = swapStateVar()
-    const newState = {
-      ...state,
-      tokenOut: {
-        ...state.tokenOut,
-        amount,
-        scaledAmount: scaleTokenAmount(amount, tokenOutInfo),
-      },
-    }
-
-    if (userTriggered) {
-      swapStateVar({
-        ...newState,
-        swapType: GqlSorSwapType.ExactOut,
-      })
-      setTokenInAmount('', { userTriggered: false })
-    } else {
-      // Sometimes we want to set the amount without triggering a fetch or
-      // swapType change, like when we populate the amount after a change from
-      // the other input.
-      swapStateVar(newState)
-    }
-  }
-
-  function getDefaultTokenState(chain: GqlChain) {
-    const {
-      tokens: { defaultSwapTokens },
-    } = getNetworkConfig(chain)
-    const { tokenIn, tokenOut } = defaultSwapTokens || {}
-
-    return {
-      swapType: GqlSorSwapType.ExactIn,
-      selectedChain: chain,
-      tokenIn: {
-        ...swapState.tokenIn,
-        address: tokenIn ? tokenIn : emptyAddress,
-      },
-      tokenOut: {
-        ...swapState.tokenOut,
-        address: tokenOut ? tokenOut : emptyAddress,
-      },
-    }
   }
 
   function resetSwapAmounts() {
-    const state = swapStateVar()
-
     swapStateVar({
-      ...state,
+      ...swapState,
       tokenIn: {
-        ...state.tokenIn,
+        ...swapState.tokenIn,
         amount: '',
         scaledAmount: BigInt(0),
       },
       tokenOut: {
-        ...state.tokenOut,
+        ...swapState.tokenOut,
         amount: '',
         scaledAmount: BigInt(0),
       },
     })
   }
 
-  function setDefaultTokens() {
-    swapStateVar(getDefaultTokenState(swapState.selectedChain))
-  }
-
-  function replaceUrlPath() {
-    const { selectedChain, tokenIn, tokenOut, swapType } = swapState
-    const { popularTokens } = networkConfig.tokens
-    const chainSlug = chainToSlugMap[selectedChain]
-    const newPath = ['/swap']
-
-    const _tokenIn = selectByAddress(popularTokens || {}, tokenIn.address) || tokenIn.address
-    const _tokenOut = selectByAddress(popularTokens || {}, tokenOut.address) || tokenOut.address
-
-    if (chainSlug) newPath.push(`/${chainSlug}`)
-    if (_tokenIn) newPath.push(`/${_tokenIn}`)
-    if (_tokenIn && _tokenOut) newPath.push(`/${_tokenOut}`)
-    if (_tokenIn && _tokenOut && tokenIn.amount && swapType === GqlSorSwapType.ExactIn) {
-      newPath.push(`/${tokenIn.amount}`)
-    }
-    if (_tokenIn && _tokenOut && tokenOut.amount && swapType === GqlSorSwapType.ExactOut) {
-      newPath.push(`/0/${tokenOut.amount}`)
-    }
-
-    window.history.replaceState({}, '', newPath.join(''))
-  }
-
-  function scaleTokenAmount(amount: string, token: GqlToken | undefined): bigint {
-    if (amount === '') return parseUnits('0', 18)
-    if (!token) throw new Error('Cant scale amount without token metadata')
-    return parseUnits(amount, token.decimals)
-  }
-
-  function calcPriceImpact() {
-    if (!bn(tokenInUsd).isZero() && !bn(tokenOutUsd).isZero()) {
-      setPriceImpact(calcMarketPriceImpact(tokenInUsd, tokenOutUsd))
-    } else if (simulationQuery.data) {
-      setPriceImpact(undefined)
-      setPriceImpactLevel('unknown')
-    }
-  }
-
-  const wethIsEth =
-    isSameAddress(swapState.tokenIn.address, networkConfig.tokens.nativeAsset.address) ||
-    isSameAddress(swapState.tokenOut.address, networkConfig.tokens.nativeAsset.address)
-  const validAmountOut = bn(swapState.tokenOut.amount).gt(0)
-
-  const protocolVersion = (simulationQuery.data as SdkSimulateSwapResponse)?.protocolVersion || 2
-  const { vaultAddress } = useVault(protocolVersion)
-
-  const swapAction: SwapAction = useMemo(() => {
-    if (
-      isWrapOrUnwrap(swapState.tokenIn.address, swapState.tokenOut.address, swapState.selectedChain)
-    ) {
-      const wrapType = getWrapType(
-        swapState.tokenIn.address,
-        swapState.tokenOut.address,
-        swapState.selectedChain
-      )
-      return wrapType ? wrapType : OSwapAction.SWAP
-    }
-
-    return OSwapAction.SWAP
-  }, [swapState.tokenIn.address, swapState.tokenOut.address, swapState.selectedChain])
-
-  const isWrap = swapAction === 'wrap' || swapAction === 'unwrap'
-
-  /**
-   * Step construction
-   */
-  const { steps, isLoadingSteps } = useSwapSteps({
-    vaultAddress,
-    swapState,
-    handler,
-    simulationQuery,
-    wethIsEth,
-    swapAction,
-    tokenInInfo,
-    tokenOutInfo,
-  })
-
-  const transactionSteps = useTransactionSteps(steps, isLoadingSteps)
-
-  const swapTxHash = urlTxHash || transactionSteps.lastTransaction?.result?.data?.transactionHash
-  const swapTxConfirmed = transactionSteps.lastTransactionConfirmed
-
-  const hasQuoteContext = !!simulationQuery.data
-
-  function setInitialTokenIn(slugTokenIn?: string) {
-    const { popularTokens } = networkConfig.tokens
-    const symbolToAddressMap = invert(popularTokens || {}) as Record<string, Address>
-    if (slugTokenIn) {
-      if (isAddress(slugTokenIn)) setTokenIn(slugTokenIn as Address)
-      else if (symbolToAddressMap[slugTokenIn] && isAddress(symbolToAddressMap[slugTokenIn])) {
-        setTokenIn(symbolToAddressMap[slugTokenIn])
-      }
-    }
-  }
-
-  function setInitialTokenOut(slugTokenOut?: string) {
-    const { popularTokens } = networkConfig.tokens
-    const symbolToAddressMap = invert(popularTokens || {}) as Record<string, Address>
-    if (slugTokenOut) {
-      if (isAddress(slugTokenOut)) setTokenOut(slugTokenOut as Address)
-      else if (symbolToAddressMap[slugTokenOut] && isAddress(symbolToAddressMap[slugTokenOut])) {
-        setTokenOut(symbolToAddressMap[slugTokenOut])
-      }
-    }
-  }
-
-  function setInitialChain(slugChain?: string) {
-    const _chain =
-      slugChain && slugToChainMap[slugChain as ChainSlug]
-        ? slugToChainMap[slugChain as ChainSlug]
-        : walletChain
-
-    setSelectedChain(_chain)
-  }
-
-  function setInitialAmounts(slugAmountIn?: string, slugAmountOut?: string) {
-    if (slugAmountIn && !slugAmountOut && bn(slugAmountIn).gt(0)) {
-      setTokenInAmount(slugAmountIn as HumanAmount)
-    } else if (slugAmountOut && bn(slugAmountOut).gt(0)) {
-      setTokenOutAmount(slugAmountOut as HumanAmount)
-    } else resetSwapAmounts()
-  }
-
-  // Set state on initial load
   useEffect(() => {
-    if (urlTxHash) return
-
-    const { chain, tokenIn, tokenOut, amountIn, amountOut } = pathParams
-
-    setInitialChain(chain)
-    setInitialTokenIn(tokenIn)
-    setInitialTokenOut(tokenOut)
-    setInitialAmounts(amountIn, amountOut)
-
-    if (!swapState.tokenIn.address && !swapState.tokenOut.address) setDefaultTokens()
-  }, [])
-
-  // When wallet chain changes, update the swap form chain
-  useEffect(() => {
-    if (isConnected && initUserChain && walletChain !== swapState.selectedChain) {
-      setSelectedChain(walletChain)
-    } else if (isConnected) {
-      setInitUserChain(walletChain)
+    if (activeAccount && swapState.tokenIn.amount && swapState.tokenOut.address) {
+      fetchPrice()
     }
-  }, [walletChain])
+  }, [activeAccount, swapState.tokenIn.amount, swapState.tokenOut.address, activeChain])
 
-  // When a new simulation is triggered, update the state
   useEffect(() => {
-    if (simulationQuery.data) {
-      handleSimulationResponse(simulationQuery.data)
+    if (price && activeAccount) {
+      fetchQuote()
     }
-  }, [simulationQuery.data])
+  }, [price, activeAccount])
 
-  // Check if tokenIn is a base wrap token and set tokenOut as the wrapped token.
   useEffect(() => {
-    const wrapper = getWrapperForBaseToken(swapState.tokenIn.address, swapState.selectedChain)
-    if (wrapper) setTokenOut(wrapper.wrappedToken)
-
-    // If the token in address changes we should reset tx step index because
-    // the first approval will be different.
-    transactionSteps.setCurrentStepIndex(0)
-  }, [swapState.tokenIn.address])
-
-  // Check if tokenOut is a base wrap token and set tokenIn as the wrapped token.
-  useEffect(() => {
-    const wrapper = getWrapperForBaseToken(swapState.tokenOut.address, swapState.selectedChain)
-    if (wrapper) setTokenIn(wrapper.wrappedToken)
-  }, [swapState.tokenOut.address])
-
-  // Update the URL path when the tokens change
-  useEffect(() => {
-    if (!swapTxHash) replaceUrlPath()
-  }, [swapState.selectedChain, swapState.tokenIn, swapState.tokenOut, swapState.tokenIn.amount])
-
-  // Update selecteable tokens when the chain changes
-  useEffect(() => {
-    setTokens(getTokensByChain(swapState.selectedChain))
-  }, [swapState.selectedChain])
-
-  // Open the preview modal when a swap tx hash is present
-  useEffect(() => {
-    if (swapTxHash) {
-      previewModalDisclosure.onOpen()
+    if (activeChain) {
+      setSelectedChain(activeChain.id as unknown as GqlChain)
     }
-  }, [swapTxHash])
-
-  // If token out value changes when swapping exact in, recalculate price impact.
-  useEffect(() => {
-    if (swapState.swapType === GqlSorSwapType.ExactIn) {
-      calcPriceImpact()
-    }
-  }, [tokenOutUsd])
-
-  // If token in value changes when swapping exact out, recalculate price impact.
-  useEffect(() => {
-    if (swapState.swapType === GqlSorSwapType.ExactOut) {
-      calcPriceImpact()
-    }
-  }, [tokenInUsd])
+  }, [activeChain])
 
   const { isDisabled, disabledReason } = isDisabledWithReason(
-    [!isConnected, LABELS.walletNotConnected],
-    [!validAmountOut, 'Invalid amount out'],
+    [!activeAccount, LABELS.walletNotConnected],
+    [!swapState.tokenOut.amount, 'Invalid amount out'],
     [needsToAcceptHighPI, 'Accept high price impact first'],
     [hasValidationErrors, 'Invalid input'],
-    [simulationQuery.isError, 'Error fetching swap'],
-    [simulationQuery.isLoading, 'Fetching swap...']
+    [!quote, 'Error fetching swap'],
+    [!price, 'Fetching swap...']
   )
 
   return {
     ...swapState,
-    transactionSteps,
+    price,
     tokens,
-    tokenInInfo,
-    tokenOutInfo,
-    tokenSelectKey,
-    simulationQuery,
+    quote,
     isDisabled,
     disabledReason,
     previewModalDisclosure,
-    handler,
-    wethIsEth,
-    swapAction,
-    urlTxHash,
-    swapTxHash,
-    hasQuoteContext,
-    isWrap,
-    swapTxConfirmed,
-    replaceUrlPath,
-    resetSwapAmounts,
-    setTokenSelectKey,
     setSelectedChain,
-    setTokenInAmount,
-    setTokenOutAmount,
+    setNeedsToAcceptHighPI,
     setTokenIn,
     setTokenOut,
+    setTokenInAmount,
+    setTokenOutAmount,
     switchTokens,
-    setNeedsToAcceptHighPI,
+    resetSwapAmounts,
+    fetchPrice,
+    fetchQuote,
   }
 }
 
-type Props = PropsWithChildren<{
-  pathParams: PathParams
-}>
-
-export function SwapProvider({ pathParams, children }: Props) {
-  const hook = _useSwap(pathParams)
-  return <SwapContext.Provider value={hook}>{children}</SwapContext.Provider>
+export function SwapProvider({ children }: { children: React.ReactNode }) {
+  const swapState = _useSwap({})
+  return <SwapContext.Provider value={swapState}>{children}</SwapContext.Provider>
 }
 
-export const useSwap = (): UseSwapResponse => useMandatoryContext(SwapContext, 'Swap')
+export const useSwap = (): {
+  price: any
+  tokens: any
+  quote: any
+  isDisabled: boolean
+  disabledReason: string | undefined
+  previewModalDisclosure: ReturnType<typeof useDisclosure>
+  setSelectedChain: (_selectedChain: GqlChain) => void
+  setNeedsToAcceptHighPI: React.Dispatch<React.SetStateAction<boolean>>
+  setTokenIn: (tokenAddress: Address) => void
+  setTokenOut: (tokenAddress: Address) => void
+  setTokenInAmount: (amount: string) => void
+  setTokenOutAmount: (amount: string) => void
+  switchTokens: () => void
+  resetSwapAmounts: () => void
+  fetchPrice: () => Promise<void>
+  fetchQuote: () => Promise<void>
+  tokenIn: {
+    address: Address
+    amount: string
+    scaledAmount: bigint
+  }
+  tokenOut: {
+    address: Address
+    amount: string
+    scaledAmount: bigint
+  }
+  swapType: GqlSorSwapType
+  selectedChain: GqlChain
+} => {
+  const context = useContext(SwapContext)
+  if (!context) {
+    throw new Error('useSwap must be used within a SwapProvider')
+  }
+  return context
+}

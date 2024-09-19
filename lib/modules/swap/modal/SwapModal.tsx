@@ -18,6 +18,8 @@ import { useOnUserAccountChanged } from '../../web3/useOnUserAccountChanged'
 import { SwapSummary } from './SwapSummary'
 import { useSwapReceipt } from '../../transactions/transaction-steps/receipts/receipt.hooks'
 import { useUserAccount } from '../../web3/UserAccountProvider'
+import { GqlChain, GqlSorSwapType } from '@/lib/shared/services/api/generated/graphql'
+import { useActiveAccount, useActiveWalletChain } from 'thirdweb/react'
 
 type Props = {
   isOpen: boolean
@@ -34,27 +36,32 @@ export function SwapPreviewModal({
 }: Props & Omit<ModalProps, 'children'>) {
   const { isDesktop } = useBreakpoints()
   const initialFocusRef = useRef(null)
-  const { userAddress } = useUserAccount()
+  const activeAccount = useActiveAccount()
+  const activeChain = useActiveWalletChain()
 
-  const { transactionSteps, swapAction, isWrap, selectedChain, swapTxHash, hasQuoteContext } =
-    useSwap()
-
-  const swapReceipt = useSwapReceipt({
-    txHash: swapTxHash,
-    userAddress,
-    chain: selectedChain,
-  })
-
-  useResetStepIndexOnOpen(isOpen, transactionSteps)
+  const {
+    price,
+    quote,
+    tokenIn,
+    tokenOut,
+    swapType,
+    selectedChain,
+    isDisabled,
+    disabledReason,
+    fetchQuote,
+  } = useSwap()
 
   useEffect(() => {
-    if (!isWrap && swapTxHash && !window.location.pathname.includes(swapTxHash)) {
-      window.history.pushState({}, '', `/swap/${chainToSlugMap[selectedChain]}/${swapTxHash}`)
+    if (isOpen && !quote && !isDisabled) {
+      fetchQuote()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [swapTxHash])
-
-  useOnUserAccountChanged(onClose)
+  }, [isOpen, quote, isDisabled, fetchQuote])
+  const swapReceipt = useSwapReceipt({
+    txHash: '0xf27d44e057cbc0feb41965a45a835823e3ab02df21585fdd8b85bcdb30895394',
+    userAddress: '0x239084A4A0C0610F6355dFA251055486157eFB2c',
+    chain: GqlChain.Mainnet,
+  })
+  const swapAction = swapType === GqlSorSwapType.ExactIn ? 'Swap' : 'Receive'
 
   return (
     <Modal
@@ -66,29 +73,26 @@ export function SwapPreviewModal({
       preserveScrollBarGap
       {...rest}
     >
-      <SuccessOverlay startAnimation={!!swapTxHash && hasQuoteContext} />
+      <SuccessOverlay startAnimation={!!quote} />
 
-      <ModalContent {...getStylesForModalContentWithStepTracker(isDesktop && hasQuoteContext)}>
-        {isDesktop && hasQuoteContext && (
-          <DesktopStepTracker transactionSteps={transactionSteps} chain={selectedChain} />
-        )}
+      <ModalContent>
         <TransactionModalHeader
           label={`Review ${capitalize(swapAction)}`}
           timeout={<SwapTimeout />}
-          txHash={swapTxHash}
+          txHash={quote?.transaction?.hash}
           chain={selectedChain}
-          isReceiptLoading={swapReceipt.isLoading}
+          isReceiptLoading={false}
         />
         <ModalCloseButton />
         <ModalBody>
           <SwapSummary {...swapReceipt} />
         </ModalBody>
-        <ActionModalFooter
-          isSuccess={!!swapTxHash && !swapReceipt.isLoading}
-          currentStep={transactionSteps.currentStep}
+        {/*  <ActionModalFooter
+          isSuccess={!!quote}
+          currentStep={quote ? 1 : 0}
           returnLabel="Swap again"
           returnAction={onClose}
-        />
+        /> */}
       </ModalContent>
     </Modal>
   )
