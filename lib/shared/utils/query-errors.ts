@@ -16,6 +16,7 @@ import { SimulateSwapParams } from '@/lib/modules/swap/queries/useSimulateSwapQu
 import { isProd } from '@/lib/config/app.config'
 import { SwapState } from '@/lib/modules/swap/swap.types'
 import { SwapHandler } from '@/lib/modules/swap/handlers/Swap.handler'
+import { QueryMeta } from '@tanstack/react-query'
 
 /**
  * Metadata to be added to the captured Sentry error
@@ -52,8 +53,13 @@ export type SwapMetaParams = (SimulateSwapParams | SwapBuildCallExtras) & {
   chainId: number
   blockNumber?: bigint
 }
-export function sentryMetaForSwapHandler(errorMessage: string, params: SwapMetaParams) {
-  return createSwapHandlerMetadata('HandlerQueryError', errorMessage, params)
+export function sentryMetaForSwapHandler(
+  errorMessage: string,
+  params: SwapMetaParams
+): QueryMeta {
+  return {
+    sentry: createSwapHandlerMetadata('SwapHandlerError', errorMessage, params),
+  }
 }
 
 /**
@@ -152,10 +158,8 @@ function createSwapHandlerMetadata(
   errorMessage: string,
   params: SwapMetaParams
 ) {
-  const { handler, ...rest } = params
   const extra: Extras = {
-    handler: handler.constructor.name,
-    params: rest,
+    params,
   }
   return createFatalMetadata(errorName, errorMessage, extra)
 }

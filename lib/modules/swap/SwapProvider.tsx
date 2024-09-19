@@ -162,7 +162,6 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
     '0'
 
   const simulationQuery = useSimulateSwapQuery({
-    handler,
     swapInputs: {
       chain: swapState.selectedChain,
       tokenIn: swapState.tokenIn.address,

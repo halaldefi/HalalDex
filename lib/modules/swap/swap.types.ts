@@ -30,18 +30,114 @@ export type SimulateSwapInputs = {
   tokenOut: Address
   swapType: GqlSorSwapType
   swapAmount: string
+  taker?: Address
 }
 
 type ApiSwapQuery = GetSorSwapsQuery['swaps']
 
-export type SimulateSwapResponse = Pick<
-  ApiSwapQuery,
-  'effectivePrice' | 'effectivePriceReversed' | 'returnAmount' | 'swapType'
->
+export interface SimulateSwapResponse {
+  blockNumber: string;
+  buyAmount: string;
+  buyToken: string;
+  sellAmount: string;
+  sellToken: string;
+  swapType: GqlSorSwapType;
+  fees: {
+    integratorFee: {
+      amount: string;
+      token: string;
+      type: string;
+    };
+    zeroExFee: {
+      amount: string;
+      token: string;
+      type: string;
+    };
+    gasFee: null;
+  };
+  gas: string;
+  gasPrice: string;
+  issues: {
+    allowance: {
+      actual: string;
+      spender: string;
+    };
+    balance: {
+      token: string;
+      actual: string;
+      expected: string;
+    };
+    simulationIncomplete: boolean;
+    invalidSourcesPassed: any[];
+  };
+  liquidityAvailable: boolean;
+  minBuyAmount: string;
+  route: {
+    fills: Array<{
+      from: string;
+      to: string;
+      source: string;
+      proportionBps: string;
+    }>;
+    tokens: Array<{
+      address: string;
+      symbol: string;
+    }>;
+  };
+  tokenMetadata: {
+    buyToken: {
+      buyTaxBps: string;
+      sellTaxBps: string;
+    };
+    sellToken: {
+      buyTaxBps: string;
+      sellTaxBps: string;
+    };
+  };
+  totalNetworkFee: string;
+  zid: string;
+}
 
-export interface SdkSimulateSwapResponse extends SimulateSwapResponse, ApiSwapQuery {
-  swap: Swap
-  queryOutput: ExactInQueryOutput | ExactOutQueryOutput
+export interface SdkSimulateSwapResponse extends SimulateSwapResponse {
+  swap: Swap;
+  queryOutput: ExactInQueryOutput | ExactOutQueryOutput;
+  // Add any additional fields from ApiSwapQuery that are not in SimulateSwapResponse
+  __typename?: 'GqlSorGetSwapPaths';
+  swapAmount?: string;
+  tokenIn?: string;
+  tokenOut?: string;
+  paths?: Array<{
+    __typename?: 'GqlSorPath';
+    inputAmountRaw: string;
+    outputAmountRaw: string;
+    pools: Array<string>;
+    protocolVersion: number;
+    tokens: Array<{ __typename?: 'Token'; address: string; decimals: number }>;
+  }>;
+  routes?: Array<{
+    __typename?: 'GqlSorSwapRoute';
+    share: number;
+    tokenInAmount: string;
+    tokenOut: string;
+    tokenOutAmount: string;
+    hops: Array<{
+      __typename?: 'GqlSorSwapRouteHop';
+      poolId: string;
+      tokenIn: string;
+      tokenInAmount: string;
+      tokenOut: string;
+      tokenOutAmount: string;
+      pool: { __typename?: 'GqlPoolMinimal'; symbol: string };
+    }>;
+  }>;
+  swaps?: Array<{
+    __typename?: 'GqlSorSwap';
+    amount: string;
+    assetInIndex: number;
+    assetOutIndex: number;
+    poolId: string;
+    userData: string;
+  }>;
 }
 
 export interface AuraBalSimulateSwapResponse extends SimulateSwapResponse {
