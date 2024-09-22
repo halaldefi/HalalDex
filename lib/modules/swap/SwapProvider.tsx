@@ -6,7 +6,7 @@ import { GqlChain, GqlSorSwapType, GqlToken } from '@/lib/shared/services/api/ge
 import { useMandatoryContext } from '@/lib/shared/utils/contexts'
 import { ApolloClient, useApolloClient, useReactiveVar } from '@apollo/client'
 import { PropsWithChildren, createContext, useEffect, useMemo, useState } from 'react'
-import { Address, Hash, isAddress, parseUnits } from 'viem'
+import { Address, formatUnits, Hash, isAddress, parseUnits } from 'viem'
 import { emptyAddress } from '../web3/contracts/wagmi-helpers'
 import { useUserAccount } from '../web3/UserAccountProvider'
 import { LABELS } from '@/lib/shared/labels'
@@ -48,6 +48,7 @@ import { usePriceImpact } from '../price-impact/PriceImpactProvider'
 import { calcMarketPriceImpact } from '../price-impact/price-impact.utils'
 import { isAuraBalSwap } from './swap.helpers'
 import { AuraBalSwapHandler } from './handlers/AuraBalSwap.handler'
+import { AFFILIATE_FEE, FEE_RECIPIENT } from './constant'
 
 export type UseSwapResponse = ReturnType<typeof _useSwap>
 export const SwapContext = createContext<UseSwapResponse | null>(null)
@@ -62,27 +63,12 @@ export type PathParams = {
   urlTxHash?: Hash
 }
 
-function selectSwapHandler(
-  tokenInAddress: Address,
-  tokenOutAddress: Address,
-  chain: GqlChain,
-  swapType: GqlSorSwapType,
-  apolloClient: ApolloClient<object>,
-  tokens: GqlToken[]
-): SwapHandler {
-  if (isNativeWrap(tokenInAddress, tokenOutAddress, chain)) {
-    return new NativeWrapHandler(apolloClient)
-  } else if (isSupportedWrap(tokenInAddress, tokenOutAddress, chain)) {
-    const WrapHandler = getWrapHandlerClass(tokenInAddress, tokenOutAddress, chain)
-    return new WrapHandler()
-  } else if (isAuraBalSwap(tokenInAddress, tokenOutAddress, chain, swapType)) {
-    return new AuraBalSwapHandler(tokens)
-  }
-
-  return new DefaultSwapHandler(apolloClient)
+function selectSwapHandler(chain: GqlChain, feeRecipient: string, affiliateFee: number) {
+  return new DefaultSwapHandler(chain, feeRecipient, affiliateFee)
 }
 
 export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
+  console.log('SwapProvider.tsx _useSwap pathParams:', pathParams)
   const swapStateVar = useMakeVarPersisted<SwapState>(
     {
       tokenIn: {
@@ -97,45 +83,52 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
       },
       swapType: GqlSorSwapType.ExactIn,
       selectedChain: GqlChain.Mainnet,
+      userAddress: emptyAddress,
     },
     'swapState'
   )
-
+  console.log('SwapProvider.tsx _useSwap swapStateVar:', swapStateVar())
   const swapState = useReactiveVar(swapStateVar)
+  console.log('SwapProvider.tsx _useSwap swapState:', swapState)
   const [needsToAcceptHighPI, setNeedsToAcceptHighPI] = useState(false)
   const [tokenSelectKey, setTokenSelectKey] = useState<'tokenIn' | 'tokenOut'>('tokenIn')
+  console.log('SwapProvider.tsx _useSwap tokenSelectKey:', tokenSelectKey)
   const [initUserChain, setInitUserChain] = useState<GqlChain | undefined>(undefined)
-
+  console.log('SwapProvider.tsx _useSwap initUserChain:', initUserChain)
   const { isConnected } = useUserAccount()
+  const data = useUserAccount()
+  console.log('SwapProvider.tsx _useSwap data useUserAccount:', data)
   const { chain: walletChain } = useNetworkConfig()
+  console.log('SwapProvider.tsx _useSwap walletChain:', walletChain)
   const { getToken, getTokensByChain, usdValueForToken } = useTokens()
+  console.log('SwapProvider.tsx _useSwap getToken:', getToken)
   const { tokens, setTokens } = useTokenBalances()
+  console.log('SwapProvider.tsx _useSwap tokens:', tokens)
   const { hasValidationErrors } = useTokenInputsValidation()
   const { setPriceImpact, setPriceImpactLevel } = usePriceImpact()
+  console.log('SwapProvider.tsx _useSwap setPriceImpact:', setPriceImpact)
 
   const networkConfig = getNetworkConfig(swapState.selectedChain)
+  console.log('SwapProvider.tsx _useSwap networkConfig:', networkConfig)
   const previewModalDisclosure = useDisclosure()
-
-  const client = useApolloClient()
+  console.log('SwapProvider.tsx _useSwap previewModalDisclosure:', previewModalDisclosure)
   const handler = useMemo(
-    () =>
-      selectSwapHandler(
-        swapState.tokenIn.address,
-        swapState.tokenOut.address,
-        swapState.selectedChain,
-        swapState.swapType,
-        client,
-        tokens
-      ),
-    [swapState.tokenIn.address, swapState.tokenOut.address, swapState.selectedChain]
+    () => selectSwapHandler(swapState.selectedChain, FEE_RECIPIENT, 100),
+    [swapState.selectedChain, FEE_RECIPIENT, AFFILIATE_FEE]
   )
+  console.log('SwapProvider.tsx _useSwap handler:', handler)
 
   const isTokenInSet = swapState.tokenIn.address !== emptyAddress
   const isTokenOutSet = swapState.tokenOut.address !== emptyAddress
 
+  console.log('SwapProvider.tsx _useSwap isTokenInSet:', isTokenInSet)
+  console.log('SwapProvider.tsx _useSwap isTokenOutSet:', isTokenOutSet)
+
   const tokenInInfo = getToken(swapState.tokenIn.address, swapState.selectedChain)
   const tokenOutInfo = getToken(swapState.tokenOut.address, swapState.selectedChain)
 
+  console.log('SwapProvider.tsx _useSwap tokenInInfo:', tokenInInfo)
+  console.log('SwapProvider.tsx _useSwap tokenOutInfo:', tokenOutInfo)
   if ((isTokenInSet && !tokenInInfo) || (isTokenOutSet && !tokenOutInfo)) {
     try {
       setDefaultTokens()
@@ -143,9 +136,27 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
       throw new Error('Token metadata not found')
     }
   }
+  const isUserAddressSet = swapState.userAddress !== emptyAddress
 
-  const tokenInUsd = usdValueForToken(tokenInInfo, swapState.tokenIn.amount)
+  if (!isUserAddressSet) {
+    swapStateVar({
+      ...swapState,
+      userAddress: data.userAddress,
+    })
+  }
+  console.log('usdValueForToken:tokenInInfo', tokenInInfo, swapState.tokenIn.amount)
+  console.log('usdValueForToken:tokenOutInfo', tokenOutInfo, swapState.tokenOut.amount)
+
+  //TODOs: Fix these
+
+  /*   const tokenInUsd = usdValueForToken(tokenInInfo, swapState.tokenIn.amount)
   const tokenOutUsd = usdValueForToken(tokenOutInfo, swapState.tokenOut.amount)
+ */
+  const tokenInUsd = usdValueForToken(tokenInInfo, 5)
+  const tokenOutUsd = usdValueForToken(tokenOutInfo, 20)
+
+  console.log('SwapProvider.tsx _useSwap tokenInUsd:', tokenInUsd)
+  console.log('SwapProvider.tsx _useSwap tokenOutUsd:', tokenOutUsd)
 
   const shouldFetchSwap = (state: SwapState, urlTxHash?: Hash) => {
     if (urlTxHash) return false
@@ -160,18 +171,26 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   const getSwapAmount = (state: SwapState) =>
     (state.swapType === GqlSorSwapType.ExactIn ? state.tokenIn.amount : state.tokenOut.amount) ||
     '0'
-
+  console.log('SwapProvider.tsx _useSwap getSwapAmount:', getSwapAmount(swapState))
+  const getScaledSwapAmount = (state: SwapState) =>
+    (state.swapType === GqlSorSwapType.ExactIn
+      ? state.tokenIn.scaledAmount
+      : state.tokenOut.scaledAmount) || BigInt(0)
+  console.log('SwapProvider.tsx _useSwap getScaledSwapAmount:', getScaledSwapAmount(swapState))
+  // console.log('SwapProvider.tsx _useSwap convertBigIntToString:', convertBigIntToString)
   const simulationQuery = useSimulateSwapQuery({
     handler,
     swapInputs: {
       chain: swapState.selectedChain,
-      tokenIn: swapState.tokenIn.address,
-      tokenOut: swapState.tokenOut.address,
+      tokenIn: swapState.tokenIn,
+      tokenOut: swapState.tokenOut,
       swapType: swapState.swapType,
-      swapAmount: getSwapAmount(swapState),
+      swapAmount: getScaledSwapAmount(swapState).toString(),
+      userAddress: swapState.userAddress || emptyAddress,
     },
     enabled: shouldFetchSwap(swapState, urlTxHash),
   })
+  console.log('SwapProvider.tsx _useSwap simulationQuery useSimulateSwapQuery:', simulationQuery)
 
   function handleSimulationResponse({ returnAmount, swapType }: SimulateSwapResponse) {
     swapStateVar({
@@ -185,14 +204,16 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
       setTokenInAmount(returnAmount, { userTriggered: false })
     }
   }
+  console.log('SwapProvider.tsx _useSwap handleSimulationResponse:', handleSimulationResponse)
 
   function setSelectedChain(_selectedChain: GqlChain) {
     const defaultTokenState = getDefaultTokenState(_selectedChain)
     swapStateVar(defaultTokenState)
   }
-
+  console.log('SwapProvider.tsx _useSwap setSelectedChain:', setSelectedChain)
   function setTokenIn(tokenAddress: Address) {
     const isSameAsTokenOut = isSameAddress(tokenAddress, swapState.tokenOut.address)
+    console.log('SwapProvider.tsx _useSwap setTokenIn tokenAddress:', tokenAddress)
 
     swapStateVar({
       ...swapState,
@@ -208,7 +229,7 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
 
   function setTokenOut(tokenAddress: Address) {
     const isSameAsTokenIn = isSameAddress(tokenAddress, swapState.tokenIn.address)
-
+    console.log('SwapProvider.tsx _useSwap setTokenOut tokenAddress:', tokenAddress)
     swapStateVar({
       ...swapState,
       tokenOut: {
@@ -245,7 +266,10 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
         scaledAmount: scaleTokenAmount(amount, tokenInInfo),
       },
     }
-
+    console.log(
+      'SwapProvider.tsx _useSwap setTokenInAmount:',
+      scaleTokenAmount(amount, tokenInInfo)
+    )
     if (userTriggered) {
       swapStateVar({
         ...newState,
@@ -264,6 +288,10 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
     { userTriggered = true }: { userTriggered?: boolean } = {}
   ) {
     const state = swapStateVar()
+    console.log(
+      'SwapProvider.tsx _useSwap setTokenOutAmount scaleTokenAmount:',
+      scaleTokenAmount(amount, tokenOutInfo)
+    )
     const newState = {
       ...state,
       tokenOut: {
@@ -309,6 +337,7 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
 
   function resetSwapAmounts() {
     const state = swapStateVar()
+    console.log('SwapProvider.tsx _useSwap resetSwapAmounts resetting:')
 
     swapStateVar({
       ...state,
@@ -350,11 +379,20 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
 
     window.history.replaceState({}, '', newPath.join(''))
   }
-
-  function scaleTokenAmount(amount: string, token: GqlToken | undefined): bigint {
-    if (amount === '') return parseUnits('0', 18)
+  function scaleTokenAmount(amount: string | undefined, token: GqlToken | undefined): bigint {
+    if (!amount || amount === '') return parseUnits('0', 18)
     if (!token) throw new Error('Cant scale amount without token metadata')
-    return parseUnits(amount, token.decimals)
+
+    console.log('SwapProvider.tsx _useSwap scaleTokenAmount amount:', amount)
+
+    try {
+      const parsedAmount = parseUnits(amount, token.decimals)
+      console.log('SwapProvider.tsx _useSwap scaleTokenAmount parseUnits amount:', parsedAmount)
+      return parsedAmount
+    } catch (error) {
+      console.error('Error parsing amount:', error)
+      return parseUnits('0', token.decimals)
+    }
   }
 
   function calcPriceImpact() {
@@ -364,6 +402,7 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
       setPriceImpact(undefined)
       setPriceImpactLevel('unknown')
     }
+    console.log('SwapProvider.tsx _useSwap calcPriceImpact tokenInUsd:', tokenInUsd)
   }
 
   const wethIsEth =
@@ -415,6 +454,7 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   function setInitialTokenIn(slugTokenIn?: string) {
     const { popularTokens } = networkConfig.tokens
     const symbolToAddressMap = invert(popularTokens || {}) as Record<string, Address>
+    console.log('SwapProvider.tsx _useSwap setInitialTokenIn slugTokenIn:', slugTokenIn)
     if (slugTokenIn) {
       if (isAddress(slugTokenIn)) setTokenIn(slugTokenIn as Address)
       else if (symbolToAddressMap[slugTokenIn] && isAddress(symbolToAddressMap[slugTokenIn])) {
@@ -426,6 +466,7 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   function setInitialTokenOut(slugTokenOut?: string) {
     const { popularTokens } = networkConfig.tokens
     const symbolToAddressMap = invert(popularTokens || {}) as Record<string, Address>
+    console.log('SwapProvider.tsx _useSwap setInitialTokenOut slugTokenOut:', slugTokenOut)
     if (slugTokenOut) {
       if (isAddress(slugTokenOut)) setTokenOut(slugTokenOut as Address)
       else if (symbolToAddressMap[slugTokenOut] && isAddress(symbolToAddressMap[slugTokenOut])) {
@@ -441,6 +482,7 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
         : walletChain
 
     setSelectedChain(_chain)
+    console.log('SwapProvider.tsx _useSwap setInitialChain _chain:', _chain)
   }
 
   function setInitialAmounts(slugAmountIn?: string, slugAmountOut?: string) {

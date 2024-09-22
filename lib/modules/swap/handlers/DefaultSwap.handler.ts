@@ -1,100 +1,95 @@
-import { getChainId } from '@/lib/config/app.config'
 import { SwapHandler } from './Swap.handler'
-import { GetSorSwapsDocument, GqlSorSwapType } from '@/lib/shared/services/api/generated/graphql'
-import { ApolloClient } from '@apollo/client'
-import { Path, Slippage, Swap, SwapKind, TokenAmount } from '@balancer/sdk'
-import { formatUnits } from 'viem'
-import { TransactionConfig } from '../../web3/contracts/contract.types'
-import { SdkBuildSwapInputs, SdkSimulateSwapResponse, SimulateSwapInputs } from '../swap.types'
-import { getRpcUrl } from '../../web3/transports'
-import { bn } from '@/lib/shared/utils/numbers'
+import { SimulateSwapInputs } from '../swap.types'
+import { formatUnits, parseUnits } from 'viem'
+import qs from 'qs'
+import { GqlChain } from '@/lib/shared/services/api/generated/graphql'
+import { getChainId } from '@/lib/config/app.config'
+import { useTokens } from '../../tokens/TokensProvider'
+import { Token } from '@balancer/sdk'
 
 export class DefaultSwapHandler implements SwapHandler {
   name = 'DefaultSwapHandler'
+  constructor(private chain: GqlChain, private feeRecipient: string, private affiliateFee: number) {
+    console.log('DefaultSwapHandler initialized')
+  }
 
-  constructor(public apolloClient: ApolloClient<object>) {}
-
-  async simulate({ ...variables }: SimulateSwapInputs): Promise<SdkSimulateSwapResponse> {
-    const { chain, swapType } = variables
-    const rpcUrl = getRpcUrl(getChainId(chain))
-
-    const { data } = await this.apolloClient.query({
-      query: GetSorSwapsDocument,
-      variables: { ...variables, queryBatchSwap: false }, // We don't need the API to do a query because we're doing that via the SDK below.
-      fetchPolicy: 'no-cache',
-      notifyOnNetworkStatusChange: true,
-    })
-
-    const paths = data.swaps.paths.map(
-      path =>
-        ({
-          ...path,
-          inputAmountRaw: BigInt(path.inputAmountRaw),
-          outputAmountRaw: BigInt(path.outputAmountRaw),
-        } as Path)
-    )
-
-    const swap = new Swap({
-      chainId: getChainId(chain),
-      paths,
-      swapKind: this.swapTypeToKind(swapType),
-    })
-
-    // Get accurate return amount with onchain call
-    const queryOutput = await swap.query(rpcUrl)
-    let onchainReturnAmount: TokenAmount
-    if (queryOutput.swapKind === SwapKind.GivenIn) {
-      onchainReturnAmount = queryOutput.expectedAmountOut
-    } else {
-      onchainReturnAmount = queryOutput.expectedAmountIn
+  //TODOs: Fix the formats of sellAmount and buyAmount
+  async simulate({
+    tokenIn,
+    tokenOut,
+    swapAmount,
+    swapType,
+    userAddress,
+  }: SimulateSwapInputs): Promise<any> {
+    const params: {
+      chainId: number
+      sellToken: string
+      buyToken: string
+      sellAmount?: string
+      buyAmount?: string
+      swapFeeRecipient: string
+      swapFeeBps: number
+      tradeSurplusRecipient: string
+      taker?: string
+      swapFeeToken?: string
+    } = {
+      chainId: getChainId(this.chain),
+      sellToken: tokenIn.address,
+      buyToken: tokenOut.address,
+      sellAmount: swapType === 'EXACT_IN' ? swapAmount : undefined,
+      buyAmount: swapType === 'EXACT_OUT' ? swapAmount : undefined,
+      swapFeeRecipient: this.feeRecipient,
+      swapFeeBps: this.affiliateFee,
+      tradeSurplusRecipient: this.feeRecipient,
+      swapFeeToken: swapType === 'EXACT_IN' ? tokenIn.address : tokenOut.address,
+      // Add any other necessary parameters
+    }
+    if (userAddress) {
+      params.taker = userAddress
     }
 
-    // Format return amount to human readable
-    const returnAmount = formatUnits(onchainReturnAmount.amount, onchainReturnAmount.token.decimals)
+    try {
+      // Use the price endpoint for simulation
+      console.log('Simulating swap with params', params)
+      const response = await fetch(`/api/price?${qs.stringify(params)}`)
+      const data = await response.json()
 
-    return {
-      ...data.swaps,
-      returnAmount,
-      swap,
-      queryOutput,
-      effectivePrice: bn(variables.swapAmount).div(returnAmount).toString(),
-      effectivePriceReversed: bn(returnAmount).div(variables.swapAmount).toString(),
+      if (data?.validationErrors?.length > 0) {
+        throw new Error(data.validationErrors.join(', '))
+      }
+
+      // Format buy amount if available
+      let formattedBuyAmount
+      if (data.buyAmount) {
+        formattedBuyAmount = formatUnits(data.buyAmount, data.buyTokenDecimals)
+      }
+
+      return {
+        ...data,
+        formattedBuyAmount,
+        sellTokenTax: data?.sellTokenToEthRate,
+        buyTokenTax: data?.buyTokenToEthRate,
+      }
+    } catch (error) {
+      console.error('Error in DefaultSwapHandler simulate:', error)
+      throw error
     }
   }
 
-  build({
-    simulateResponse: { swap, queryOutput },
-    slippagePercent,
-    account,
-    selectedChain,
-    wethIsEth,
-  }: SdkBuildSwapInputs): TransactionConfig {
-    const tx = swap.buildCall({
-      slippage: Slippage.fromPercentage(slippagePercent as `${number}`),
-      deadline: BigInt(Number.MAX_SAFE_INTEGER),
-      sender: account,
-      recipient: account,
-      wethIsEth,
-      queryOutput,
-    })
+  async getQuote(params: SimulateSwapInputs): Promise<any> {
+    try {
+      // Use the quote endpoint for getting the actual swap quote
+      const response = await fetch(`/api/quote?${qs.stringify(params)}`)
+      const data = await response.json()
 
-    return {
-      account,
-      chainId: getChainId(selectedChain),
-      data: tx.callData,
-      value: tx.value,
-      to: tx.to,
-    }
-  }
+      if (data?.validationErrors?.length > 0) {
+        throw new Error(data.validationErrors.join(', '))
+      }
 
-  private swapTypeToKind(swapType: GqlSorSwapType): SwapKind {
-    switch (swapType) {
-      case GqlSorSwapType.ExactIn:
-        return SwapKind.GivenIn
-      case GqlSorSwapType.ExactOut:
-        return SwapKind.GivenOut
-      default:
-        throw new Error('Invalid swap type')
+      return data
+    } catch (error) {
+      console.error('Error in DefaultSwapHandler getQuote:', error)
+      throw error
     }
   }
 }

@@ -16,6 +16,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useUserAccount } from '@/lib/modules/web3/UserAccountProvider'
 import { ThirdwebConnectButton } from '@/lib/modules/web3/ThirdwebConnectButton'
+import { ConnectWallet } from '@/lib/modules/web3/ConnectWallet'
 
 type Props = {
   leftSlot?: React.ReactNode
@@ -131,7 +132,7 @@ function NavActions() {
         display: { base: 'none', lg: 'block' },
       },
       {
-        el: <ThirdwebConnectButton />,
+        el: <ConnectWallet />,
         display: { base: 'block', lg: 'block' },
       },
       {

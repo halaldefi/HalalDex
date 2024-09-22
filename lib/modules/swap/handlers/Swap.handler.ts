@@ -13,5 +13,5 @@ export interface SwapHandler {
   name: string
 
   simulate(inputs: SimulateSwapInputs): Promise<SimulateSwapResponse>
-  build(inputs: BuildSwapInputs): TransactionConfig
+  build?(inputs: BuildSwapInputs): TransactionConfig
 }

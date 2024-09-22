@@ -37,13 +37,20 @@ export function useSwapSteps({
 
   const humanAmountIn = swapState.tokenIn.amount
   const tokenInAmounts = useMemo(() => {
-    if (!tokenInInfo) return [] as RawAmount[]
-    return [
-      {
-        address: tokenInInfo.address as Address,
-        rawAmount: parseUnits(humanAmountIn, tokenInInfo.decimals),
-      },
-    ]
+    if (!tokenInInfo || !humanAmountIn) return [] as RawAmount[]
+
+    try {
+      const parsedAmount = parseUnits(humanAmountIn, tokenInInfo.decimals)
+      return [
+        {
+          address: tokenInInfo.address as Address,
+          rawAmount: parsedAmount,
+        },
+      ]
+    } catch (error) {
+      console.error('Error parsing amount:', error)
+      return [] as RawAmount[]
+    }
   }, [humanAmountIn, tokenInInfo])
 
   const approvalActionType: ApprovalAction =

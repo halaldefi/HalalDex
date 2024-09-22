@@ -22,14 +22,18 @@ export type SwapState = {
   tokenOut: SwapTokenInput
   swapType: GqlSorSwapType
   selectedChain: GqlChain
+  userAddress?: Address
 }
 
 export type SimulateSwapInputs = {
   chain: GqlChain
-  tokenIn: Address
-  tokenOut: Address
+  tokenIn: SwapTokenInput
+  tokenOut: SwapTokenInput
   swapType: GqlSorSwapType
   swapAmount: string
+  userAddress?: Address
+  feeRecipient?: Address
+  affiliateFee?: number
 }
 
 type ApiSwapQuery = GetSorSwapsQuery['swaps']

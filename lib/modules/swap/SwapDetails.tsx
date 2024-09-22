@@ -19,14 +19,14 @@ export function OrderRoute() {
 
   const queryData = simulationQuery.data as SdkSimulateSwapResponse
   const orderRouteVersion = queryData ? queryData.protocolVersion : 2
-  const hopCount = queryData?.routes[0]?.hops?.length ?? 0
+  // const hopCount = queryData?.routes[0]?.hops?.length ?? 0
 
   return (
     <HStack justify="space-between" w="full">
       <Text color="grayText">Order route</Text>
       <HStack>
         <Text color="grayText">
-          BV{orderRouteVersion}: {hopCount} {pluralize('hop', hopCount)}
+          {/* BV{orderRouteVersion}: {hopCount} {pluralize('hop', hopCount)} */}
         </Text>
         <Tooltip label="Balancer vault version and number of hops" fontSize="sm">
           <InfoIcon />
