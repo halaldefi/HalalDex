@@ -62,12 +62,55 @@ export class DefaultSwapHandler implements SwapHandler {
       if (data.buyAmount) {
         formattedBuyAmount = formatUnits(data.buyAmount, data.buyTokenDecimals)
       }
-
+      const returnAmount = formatUnits(data.buyAmount, data.buyTokenDecimals)
+      const swapAmountBn = parseUnits(swapAmount, data.sellTokenDecimals)
+      const returnAmountBn = BigInt(data.buyAmount)
       return {
         ...data,
         formattedBuyAmount,
-        sellTokenTax: data?.sellTokenToEthRate,
-        buyTokenTax: data?.buyTokenToEthRate,
+        returnAmount,
+        effectivePrice: (swapAmountBn / returnAmountBn).toString(),
+        effectivePriceReversed: (returnAmountBn / swapAmountBn).toString(),
+        priceImpact: {
+          priceImpact: '0', // You may need to calculate this based on the 0x response
+          error: null,
+          __typename: 'GqlPriceImpact',
+        },
+        swapAmount,
+        tokenIn: data.sellToken,
+        tokenOut: data.buyToken,
+        tokenInAmount: data.sellAmount,
+        tokenOutAmount: data.buyAmount,
+        queryOutput: {
+          swapKind: swapType === 'EXACT_IN' ? 0 : 1,
+          expectedAmountOut: {
+            token: {
+              chainId: getChainId(this.chain),
+              address: data.buyToken,
+              decimals: data.buyTokenDecimals,
+              wrapped: data.buyToken,
+            },
+            scalar: '1000000000000',
+            decimalScale: '1000000',
+            amount: data.buyAmount,
+            scale18: (
+              BigInt(data.buyAmount) *
+              BigInt(10) ** BigInt(18 - data.buyTokenDecimals)
+            ).toString(),
+          },
+          amountIn: {
+            token: {
+              chainId: getChainId(this.chain),
+              address: data.sellToken,
+              decimals: data.sellTokenDecimals,
+              wrapped: data.sellToken,
+            },
+            scalar: '1',
+            decimalScale: (BigInt(10) ** BigInt(data.sellTokenDecimals)).toString(),
+            amount: data.sellAmount,
+            scale18: data.sellAmount,
+          },
+        },
       }
     } catch (error) {
       console.error('Error in DefaultSwapHandler simulate:', error)
