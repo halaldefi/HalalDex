@@ -13,7 +13,6 @@ export class DefaultSwapHandler implements SwapHandler {
     console.log('DefaultSwapHandler initialized')
   }
 
-  //TODOs: Fix the formats of sellAmount and buyAmount
   async simulate({
     tokenIn,
     tokenOut,
