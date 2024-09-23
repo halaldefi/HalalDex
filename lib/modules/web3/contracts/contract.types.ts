@@ -5,7 +5,7 @@ import {
   useSimulateContract,
   useWriteContract,
 } from 'wagmi'
-import { Abi, Address, erc20Abi } from 'viem'
+import { Abi, Address, erc20Abi, Hex } from 'viem'
 import { SupportedChainId } from '@/lib/config/config.types'
 
 export type TransactionSimulation = (
@@ -31,7 +31,7 @@ export type ReadAbiMutability = 'view'
 export type TransactionConfig = {
   account: Address
   chainId: SupportedChainId
-  data: Address
+  data: Hex
   to: Address
   value?: bigint
 }

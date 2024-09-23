@@ -29,6 +29,7 @@ export function ManagedTransactionButton({
   }, [id, transaction.execution.status, transaction.simulation.status, transaction.result.status])
   return <TransactionStepButton step={{ labels: params.labels, ...transaction }} />
 }
+// const { gas } = quoteResponse; // This is from your 0x API response
 
 export function ManagedSendTransactionButton({
   id,
@@ -36,13 +37,25 @@ export function ManagedSendTransactionButton({
 }: { id: string } & ManagedSendTransactionInput) {
   console.log('ManagedSendTransactionButton', params)
   console.log('ManagedSendTransactionButton', id)
-  const transaction = useManagedSendTransaction(params)
+  // Ensure that gas is provided in txConfig
+  const txConfigWithGas = {
+    ...params.txConfig,
+    gas: BigInt(5000000),
+  }
+  const transaction = useManagedSendTransaction({
+    ...params,
+    txConfig: txConfigWithGas,
+  })
   console.log('ManagedSendTransactionButton', transaction)
   const { updateTransaction } = useTransactionState()
 
   useEffect(() => {
     updateTransaction(id, transaction)
   }, [id, transaction.execution.status, transaction.simulation.status, transaction.result.status])
+  if (!txConfigWithGas.gas) {
+    console.warn('Gas not provided in txConfig. This may lead to inaccurate gas estimation.')
+  }
+
   return <TransactionStepButton step={{ labels: params.labels, ...transaction }} />
 }
 
