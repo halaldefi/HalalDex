@@ -50,6 +50,7 @@ export function useSwapStep({
     swapState,
     enabled: isBuildQueryEnabled && !!simulationQuery.data,
   })
+  console.log('useSwapStep buildSwapQuery:', buildSwapQuery)
 
   const tokenInSymbol = tokenInInfo?.symbol || 'Unknown'
   const tokenOutSymbol = tokenOutInfo?.symbol || 'Unknown'

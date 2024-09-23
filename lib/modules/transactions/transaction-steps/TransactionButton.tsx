@@ -27,7 +27,6 @@ export function ManagedTransactionButton({
   useEffect(() => {
     updateTransaction(id, transaction)
   }, [id, transaction.execution.status, transaction.simulation.status, transaction.result.status])
-
   return <TransactionStepButton step={{ labels: params.labels, ...transaction }} />
 }
 
@@ -35,13 +34,15 @@ export function ManagedSendTransactionButton({
   id,
   ...params
 }: { id: string } & ManagedSendTransactionInput) {
+  console.log('ManagedSendTransactionButton', params)
+  console.log('ManagedSendTransactionButton', id)
   const transaction = useManagedSendTransaction(params)
+  console.log('ManagedSendTransactionButton', transaction)
   const { updateTransaction } = useTransactionState()
 
   useEffect(() => {
     updateTransaction(id, transaction)
   }, [id, transaction.execution.status, transaction.simulation.status, transaction.result.status])
-
   return <TransactionStepButton step={{ labels: params.labels, ...transaction }} />
 }
 

@@ -4,13 +4,14 @@ import { onlyExplicitRefetch } from '@/lib/shared/utils/queries'
 import { useQuery } from '@tanstack/react-query'
 import { ensureLastQueryResponse } from '../../pool/actions/LiquidityActionHelpers'
 import { SwapHandler } from '../handlers/Swap.handler'
-import { SimulateSwapResponse, SwapState } from '../swap.types'
+import { SimulateSwapResponse, SimulateSwapResponse0x, SwapState } from '../swap.types'
 import { swapQueryKeys } from './swapQueryKeys'
 import { SwapSimulationQueryResult } from './useSimulateSwapQuery'
 import { useRelayerSignature } from '../../relayer/RelayerSignatureProvider'
 import { SwapMetaParams, sentryMetaForSwapHandler } from '@/lib/shared/utils/query-errors'
 import { getChainId } from '@/lib/config/app.config'
 import { useBlockNumber } from 'wagmi'
+import { GqlSorSwapType } from '@/lib/shared/services/api/generated/graphql'
 
 export type BuildSwapQueryResponse = ReturnType<typeof useBuildSwapQuery>
 
@@ -33,8 +34,6 @@ export function useBuildSwapQuery({
 }) {
   const { userAddress, isConnected } = useUserAccount()
   const { slippage } = useUserSettings()
-  const { relayerApprovalSignature } = useRelayerSignature()
-
   const { selectedChain, tokenIn, tokenOut, swapType } = swapState
   const chainId = getChainId(selectedChain)
   const { data: blockNumber } = useBlockNumber({ chainId })
@@ -43,26 +42,34 @@ export function useBuildSwapQuery({
     selectedChain,
     account: userAddress,
     slippagePercent: slippage,
-    simulateResponse: simulationQuery.data || ({} as SimulateSwapResponse),
+    simulateResponse:
+      simulationQuery.data ||
+      ({
+        effectivePrice: '0',
+        effectivePriceReversed: '0',
+        returnAmount: '0',
+        swapType: swapState.swapType,
+      } as SimulateSwapResponse0x),
   })
 
   const queryFn = async () => {
-    const simulateResponse = ensureLastQueryResponse('Swap query', simulationQuery.data)
+    if (!simulationQuery.data) {
+      throw new Error('Simulation data is not available')
+    }
 
-    const response = handler.build({
+    const quoteResponse = await handler.getQuote({
       tokenIn,
       tokenOut,
+      swapAmount: swapType === GqlSorSwapType.ExactIn ? tokenIn.amount : tokenOut.amount,
       swapType,
-      account: userAddress,
-      slippagePercent: slippage,
-      selectedChain,
-      simulateResponse,
-      wethIsEth,
-      relayerApprovalSignature,
+      userAddress,
+      chain: selectedChain,
     })
-    console.log('Swap callData built:', response)
 
-    return response
+    const transactionConfig = handler.buildTransaction(quoteResponse)
+
+    console.log('Swap callData built:', transactionConfig)
+    return transactionConfig
   }
 
   return useQuery({

@@ -119,7 +119,7 @@ export interface AuraBalSimulateSwapResponse extends SimulateSwapResponse {
 export interface BuildSwapInputs extends SwapState {
   account: Address
   slippagePercent: string
-  simulateResponse: SimulateSwapResponse
+  simulateResponse: SimulateSwapResponse0x
   wethIsEth: boolean
   relayerApprovalSignature?: Hex
 }

@@ -32,6 +32,7 @@ export function useManagedSendTransaction({
   gasEstimationMeta,
 }: ManagedSendTransactionInput) {
   // chainId will always have the correct value as the transaction is disabled when txConfig is undefined
+  console.log('useManagedSendTransaction', txConfig)
   const chainId = txConfig?.chainId || mainnet.id
   const { shouldChangeNetwork } = useChainSwitch(chainId)
   const { minConfirmations } = useNetworkConfig()
