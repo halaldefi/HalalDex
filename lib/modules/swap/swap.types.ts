@@ -43,6 +43,7 @@ export interface SimulateSwapResponse {
   buyAmount: string
   buyToken: string
   sellAmount: string
+  returnAmount?: string
   sellToken: string
   swapType: GqlSorSwapType
   fees: {

@@ -65,17 +65,17 @@ export class DefaultSwapHandler implements SwapHandler {
       const returnAmount = formatUnits(data.buyAmount, data.buyTokenDecimals)
       const swapAmountBn = parseUnits(swapAmount, data.sellTokenDecimals)
       const returnAmountBn = BigInt(data.buyAmount)
+      console.log('Simulated swap', data)
+      console.log('Simulated swap formattedBuyAmount', formattedBuyAmount)
+      console.log('Simulated swap returnAmount', returnAmount)
+      console.log('Simulated swap swapAmountBn', swapAmountBn)
+      console.log('Simulated swap returnAmountBn', returnAmountBn)
       return {
         ...data,
         formattedBuyAmount,
-        returnAmount,
         effectivePrice: (swapAmountBn / returnAmountBn).toString(),
         effectivePriceReversed: (returnAmountBn / swapAmountBn).toString(),
-        priceImpact: {
-          priceImpact: '0', // You may need to calculate this based on the 0x response
-          error: null,
-          __typename: 'GqlPriceImpact',
-        },
+        returnAmount: returnAmount,
         swapAmount,
         tokenIn: data.sellToken,
         tokenOut: data.buyToken,
@@ -93,10 +93,6 @@ export class DefaultSwapHandler implements SwapHandler {
             scalar: '1000000000000',
             decimalScale: '1000000',
             amount: data.buyAmount,
-            scale18: (
-              BigInt(data.buyAmount) *
-              BigInt(10) ** BigInt(18 - data.buyTokenDecimals)
-            ).toString(),
           },
           amountIn: {
             token: {
@@ -106,7 +102,6 @@ export class DefaultSwapHandler implements SwapHandler {
               wrapped: data.sellToken,
             },
             scalar: '1',
-            decimalScale: (BigInt(10) ** BigInt(data.sellTokenDecimals)).toString(),
             amount: data.sellAmount,
             scale18: data.sellAmount,
           },

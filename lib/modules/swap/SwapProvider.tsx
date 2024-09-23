@@ -149,11 +149,11 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
 
   //TODOs: Fix these
 
-  /*   const tokenInUsd = usdValueForToken(tokenInInfo, swapState.tokenIn.amount)
+  const tokenInUsd = usdValueForToken(tokenInInfo, swapState.tokenIn.amount)
   const tokenOutUsd = usdValueForToken(tokenOutInfo, swapState.tokenOut.amount)
- */
+  /* 
   const tokenInUsd = usdValueForToken(tokenInInfo, 5)
-  const tokenOutUsd = usdValueForToken(tokenOutInfo, 20)
+  const tokenOutUsd = usdValueForToken(tokenOutInfo, 20) */
 
   console.log('SwapProvider.tsx _useSwap tokenInUsd:', tokenInUsd)
   console.log('SwapProvider.tsx _useSwap tokenOutUsd:', tokenOutUsd)
@@ -193,6 +193,7 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   console.log('SwapProvider.tsx _useSwap simulationQuery useSimulateSwapQuery:', simulationQuery)
 
   function handleSimulationResponse({ returnAmount, swapType }: SimulateSwapResponse) {
+    if (!returnAmount) return
     swapStateVar({
       ...swapState,
       swapType,
@@ -519,6 +520,7 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   // When a new simulation is triggered, update the state
   useEffect(() => {
     if (simulationQuery.data) {
+      console.log('SwapProvider.tsx _useSwap simulationQuery.data:', simulationQuery.data)
       handleSimulationResponse(simulationQuery.data)
     }
   }, [simulationQuery.data])
