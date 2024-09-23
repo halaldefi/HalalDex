@@ -1,6 +1,11 @@
 import { ApolloClient } from '@apollo/client'
 import { TransactionConfig } from '../../web3/contracts/contract.types'
-import { BuildSwapInputs, SimulateSwapResponse, SimulateSwapInputs } from '../swap.types'
+import {
+  BuildSwapInputs,
+  SimulateSwapResponse,
+  SimulateSwapInputs,
+  SimulateSwapResponse0x,
+} from '../swap.types'
 import { GqlToken } from '@/lib/shared/services/api/generated/graphql'
 
 /**
@@ -12,6 +17,7 @@ export interface SwapHandler {
   tokens?: GqlToken[]
   name: string
 
-  simulate(inputs: SimulateSwapInputs): Promise<SimulateSwapResponse>
+  simulate(inputs: SimulateSwapInputs): Promise<SimulateSwapResponse0x>
   build?(inputs: BuildSwapInputs): TransactionConfig
+  getQuote?(params: SimulateSwapInputs): Promise<any>
 }

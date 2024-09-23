@@ -21,6 +21,7 @@ import {
   OSwapAction,
   SdkSimulateSwapResponse,
   SimulateSwapResponse,
+  SimulateSwapResponse0x,
   SwapAction,
   SwapState,
 } from './swap.types'
@@ -192,7 +193,7 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   })
   console.log('SwapProvider.tsx _useSwap simulationQuery useSimulateSwapQuery:', simulationQuery)
 
-  function handleSimulationResponse({ returnAmount, swapType }: SimulateSwapResponse) {
+  function handleSimulationResponse({ returnAmount, swapType }: SimulateSwapResponse0x) {
     if (!returnAmount) return
     swapStateVar({
       ...swapState,

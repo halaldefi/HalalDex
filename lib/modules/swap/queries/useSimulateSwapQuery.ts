@@ -5,8 +5,7 @@ import { useDebounce } from 'use-debounce'
 import { useQuery } from '@tanstack/react-query'
 import { SwapHandler } from '../handlers/Swap.handler'
 import { swapQueryKeys } from './swapQueryKeys'
-import { SimulateSwapInputs, SimulateSwapResponse } from '../swap.types'
-import { sentryMetaForSwapHandler } from '@/lib/shared/utils/query-errors'
+import { SimulateSwapInputs, SimulateSwapResponse, SimulateSwapResponse0x } from '../swap.types'
 import { isZero } from '@/lib/shared/utils/numbers'
 import { getChainId } from '@/lib/config/app.config'
 import { useBlockNumber } from 'wagmi'
@@ -46,25 +45,19 @@ export function useSimulateSwapQuery({
     affiliateFee,
   }
 
+  console.log('useSimulateSwapQuery inputs:', inputs)
+
   const chainId = getChainId(chain)
   const { data: blockNumber } = useBlockNumber({ chainId })
 
   const queryKey = swapQueryKeys.simulation(inputs)
-
   const queryFn = async () => handler.simulate(inputs)
 
-  return useQuery<SimulateSwapResponse, Error>({
+  return useQuery<SimulateSwapResponse0x, Error>({
     queryKey,
     queryFn,
     enabled: enabled && !isZero(debouncedSwapAmount),
     gcTime: 0,
-    meta: sentryMetaForSwapHandler('Error in swap simulation query', {
-      chainId: getChainId(chain),
-      blockNumber,
-      handler,
-      swapInputs: inputs,
-      enabled,
-    }),
     ...onlyExplicitRefetch,
   })
 }

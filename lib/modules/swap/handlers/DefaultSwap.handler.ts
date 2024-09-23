@@ -1,12 +1,17 @@
 import { SwapHandler } from './Swap.handler'
-import { SimulateSwapInputs, SimulateSwapResponse } from '../swap.types'
+import {
+  SdkBuildSwapInputs,
+  SimulateSwapInputs,
+  SimulateSwapResponse,
+  SimulateSwapResponse0x,
+} from '../swap.types'
 import { formatUnits } from 'viem'
 import qs from 'qs'
 import { GqlChain, GqlSorSwapType, GqlToken } from '@/lib/shared/services/api/generated/graphql'
 import { getChainId } from '@/lib/config/app.config'
 import { useTokens } from '../../tokens/TokensProvider'
 import BigNumber from 'bignumber.js'
-
+import { TransactionConfig } from '../../web3/contracts/contract.types'
 export class DefaultSwapHandler implements SwapHandler {
   name = 'DefaultSwapHandler'
   private getToken: (address: string, chain: GqlChain) => GqlToken | undefined
@@ -23,7 +28,7 @@ export class DefaultSwapHandler implements SwapHandler {
     swapAmount,
     swapType,
     userAddress,
-  }: SimulateSwapInputs): Promise<any> {
+  }: SimulateSwapInputs): Promise<SimulateSwapResponse0x> {
     const params = {
       chainId: getChainId(this.chain),
       sellToken: tokenIn.address,
@@ -54,27 +59,13 @@ export class DefaultSwapHandler implements SwapHandler {
       const sellAmountBn = BigNumber(data.sellAmount)
       const buyAmountBn = BigNumber(data.buyAmount)
 
-      let returnAmount: string
-      if (swapType === GqlSorSwapType.ExactIn) {
-        console.log('DefaultSwapHandler simulate: swapType ExactIn')
-        console.log('DefaultSwapHandler simulate: sellAmount', data.sellAmount)
-        console.log('DefaultSwapHandler simulate: buyAmount', data.buyAmount)
-        console.log('DefaultSwapHandler simulate: sellTokenInfo.decimals', sellTokenInfo.decimals)
-        console.log('DefaultSwapHandler simulate: buyTokenInfo.decimals', buyTokenInfo.decimals)
-        returnAmount = formatUnits(data.buyAmount, buyTokenInfo.decimals)
-      } else {
-        console.log('DefaultSwapHandler simulate: swapType ExactOut')
-        console.log('DefaultSwapHandler simulate: sellAmount', data.sellAmount)
-        console.log('DefaultSwapHandler simulate: buyAmount', data.buyAmount)
-        console.log('DefaultSwapHandler simulate: sellTokenInfo.decimals', sellTokenInfo.decimals)
-        console.log('DefaultSwapHandler simulate: buyTokenInfo.decimals', buyTokenInfo.decimals)
-        returnAmount = formatUnits(data.sellAmount, sellTokenInfo.decimals)
-      }
-
       return {
         effectivePrice: sellAmountBn.div(buyAmountBn).toString(),
         effectivePriceReversed: buyAmountBn.div(sellAmountBn).toString(),
-        returnAmount,
+        returnAmount:
+          swapType === GqlSorSwapType.ExactIn
+            ? formatUnits(data.buyAmount, buyTokenInfo.decimals)
+            : formatUnits(data.sellAmount, sellTokenInfo.decimals),
         swapType,
       }
     } catch (error) {
@@ -84,12 +75,25 @@ export class DefaultSwapHandler implements SwapHandler {
   }
 
   async getQuote(params: SimulateSwapInputs): Promise<any> {
+    const { tokenIn, tokenOut, swapAmount, swapType, userAddress } = params
+    const quoteParams = {
+      chainId: getChainId(this.chain),
+      sellToken: tokenIn.address,
+      buyToken: tokenOut.address,
+      sellAmount: swapType === GqlSorSwapType.ExactIn ? swapAmount : undefined,
+      buyAmount: swapType === GqlSorSwapType.ExactOut ? swapAmount : undefined,
+      swapFeeRecipient: this.feeRecipient,
+      swapFeeBps: this.affiliateFee,
+      tradeSurplusRecipient: this.feeRecipient,
+      swapFeeToken: swapType === GqlSorSwapType.ExactIn ? tokenIn.address : tokenOut.address,
+      taker: userAddress,
+    }
+
     try {
-      // Use the quote endpoint for getting the actual swap quote
-      const response = await fetch(`/api/quote?${qs.stringify(params)}`)
+      const response = await fetch(`/api/quote?${qs.stringify(quoteParams)}`)
       const data = await response.json()
 
-      if (data?.validationErrors?.length > 0) {
+      if (data.validationErrors?.length > 0) {
         throw new Error(data.validationErrors.join(', '))
       }
 
@@ -97,6 +101,15 @@ export class DefaultSwapHandler implements SwapHandler {
     } catch (error) {
       console.error('Error in DefaultSwapHandler getQuote:', error)
       throw error
+    }
+  }
+  buildTransaction(quoteResponse: any): TransactionConfig {
+    return {
+      to: quoteResponse.to,
+      data: quoteResponse.data,
+      value: quoteResponse.value,
+      chainId: getChainId(this.chain),
+      account: quoteResponse.from,
     }
   }
 }

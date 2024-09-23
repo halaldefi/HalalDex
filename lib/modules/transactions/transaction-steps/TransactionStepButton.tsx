@@ -21,6 +21,13 @@ export function TransactionStepButton({ step }: Props) {
   const { isConnected } = useUserAccount()
   const { shouldChangeNetwork, NetworkSwitchButton, networkSwitchButtonProps } =
     useChainSwitch(chainId)
+  console.log('TransactionStepButton', {
+    step,
+    isConnected,
+    shouldChangeNetwork,
+    NetworkSwitchButton,
+    networkSwitchButtonProps,
+  })
   const isTransactButtonVisible = isConnected
   const transactionState = getTransactionState(step)
   const isButtonLoading =

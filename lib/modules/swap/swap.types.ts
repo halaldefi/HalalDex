@@ -38,14 +38,19 @@ export type SimulateSwapInputs = {
 
 type ApiSwapQuery = GetSorSwapsQuery['swaps']
 
+export interface SimulateSwapResponse0x {
+  returnAmount: string
+  swapType: GqlSorSwapType
+  effectivePrice: string
+  effectivePriceReversed: string
+}
+
 export interface SimulateSwapResponse {
   blockNumber: string
   buyAmount: string
   buyToken: string
   sellAmount: string
-  returnAmount?: string
   sellToken: string
-  swapType: GqlSorSwapType
   fees: {
     integratorFee: {
       amount: string
@@ -101,6 +106,7 @@ export interface SimulateSwapResponse {
   totalNetworkFee: string
   zid: string
 }
+
 export interface SdkSimulateSwapResponse extends SimulateSwapResponse, ApiSwapQuery {
   swap: Swap
   queryOutput: ExactInQueryOutput | ExactOutQueryOutput
