@@ -53,7 +53,21 @@ import { AFFILIATE_FEE, FEE_RECIPIENT } from './constant'
 
 export type UseSwapResponse = ReturnType<typeof _useSwap>
 export const SwapContext = createContext<UseSwapResponse | null>(null)
+export function scaleTokenAmount(amount: string | undefined, token: GqlToken | undefined): bigint {
+  if (!amount || amount === '') return parseUnits('0', 18)
+  if (!token) throw new Error('Cant scale amount without token metadata')
 
+  console.log('SwapProvider.tsx _useSwap scaleTokenAmount amount:', amount)
+
+  try {
+    const parsedAmount = parseUnits(amount, token.decimals)
+    console.log('SwapProvider.tsx _useSwap scaleTokenAmount parseUnits amount:', parsedAmount)
+    return parsedAmount
+  } catch (error) {
+    console.error('Error parsing amount:', error)
+    return parseUnits('0', token.decimals)
+  }
+}
 export type PathParams = {
   chain?: string
   tokenIn?: string
@@ -380,21 +394,6 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
     }
 
     window.history.replaceState({}, '', newPath.join(''))
-  }
-  function scaleTokenAmount(amount: string | undefined, token: GqlToken | undefined): bigint {
-    if (!amount || amount === '') return parseUnits('0', 18)
-    if (!token) throw new Error('Cant scale amount without token metadata')
-
-    console.log('SwapProvider.tsx _useSwap scaleTokenAmount amount:', amount)
-
-    try {
-      const parsedAmount = parseUnits(amount, token.decimals)
-      console.log('SwapProvider.tsx _useSwap scaleTokenAmount parseUnits amount:', parsedAmount)
-      return parsedAmount
-    } catch (error) {
-      console.error('Error parsing amount:', error)
-      return parseUnits('0', token.decimals)
-    }
   }
 
   function calcPriceImpact() {

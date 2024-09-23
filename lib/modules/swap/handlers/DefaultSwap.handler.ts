@@ -12,6 +12,7 @@ import { getChainId } from '@/lib/config/app.config'
 import { useTokens } from '../../tokens/TokensProvider'
 import BigNumber from 'bignumber.js'
 import { TransactionConfig } from '../../web3/contracts/contract.types'
+import { scaleTokenAmount } from '../SwapProvider'
 export class DefaultSwapHandler implements SwapHandler {
   name = 'DefaultSwapHandler'
   private getToken: (address: string, chain: GqlChain) => GqlToken | undefined
@@ -76,12 +77,24 @@ export class DefaultSwapHandler implements SwapHandler {
 
   async getQuote(params: SimulateSwapInputs): Promise<any> {
     const { tokenIn, tokenOut, swapAmount, swapType, userAddress } = params
+    const sellTokenInfo = this.getToken(tokenIn.address, this.chain)
+    const buyTokenInfo = this.getToken(tokenOut.address, this.chain)
+    if (!sellTokenInfo || !buyTokenInfo) {
+      throw new Error('Token information not found')
+    }
+    const sellSwapAmount = scaleTokenAmount(swapAmount, sellTokenInfo)
+    const buySwapAmount = scaleTokenAmount(swapAmount, buyTokenInfo)
+
+    const getScaledSwapAmount = (sellSwapAmount: BigInt, buySwapAmount: BigInt) =>
+      params.swapType === GqlSorSwapType.ExactIn ? sellSwapAmount : buySwapAmount || BigInt(0)
+    const newSwapAmount = getScaledSwapAmount(sellSwapAmount, buySwapAmount)
+    // convert swap amount to base units
     const quoteParams = {
       chainId: getChainId(this.chain),
       sellToken: tokenIn.address,
       buyToken: tokenOut.address,
-      sellAmount: swapType === GqlSorSwapType.ExactIn ? swapAmount : undefined,
-      buyAmount: swapType === GqlSorSwapType.ExactOut ? swapAmount : undefined,
+      sellAmount: swapType === GqlSorSwapType.ExactIn ? newSwapAmount : undefined,
+      buyAmount: swapType === GqlSorSwapType.ExactOut ? newSwapAmount : undefined,
       swapFeeRecipient: this.feeRecipient,
       swapFeeBps: this.affiliateFee,
       tradeSurplusRecipient: this.feeRecipient,
