@@ -198,14 +198,14 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
       ...swapState,
       swapType,
     })
-
+    console.log('SwapProvider.tsx _useSwap handleSimulationResponse returnAmount:', returnAmount)
+    console.log('SwapProvider.tsx _useSwap handleSimulationResponse swapType:', swapType)
     if (swapType === GqlSorSwapType.ExactIn) {
       setTokenOutAmount(returnAmount, { userTriggered: false })
     } else {
       setTokenInAmount(returnAmount, { userTriggered: false })
     }
   }
-  console.log('SwapProvider.tsx _useSwap handleSimulationResponse:', handleSimulationResponse)
 
   function setSelectedChain(_selectedChain: GqlChain) {
     const defaultTokenState = getDefaultTokenState(_selectedChain)
