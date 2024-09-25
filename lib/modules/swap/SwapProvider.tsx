@@ -119,7 +119,14 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   console.log('SwapProvider.tsx _useSwap getToken:', getToken)
   const { tokens, setTokens } = useTokenBalances()
   console.log('SwapProvider.tsx _useSwap tokens:', tokens)
-  const { hasValidationErrors } = useTokenInputsValidation()
+  const { hasValidationErrors, validationErrors } = useTokenInputsValidation()
+  console.log(
+    'SwapProvider.tsx _useSwap hasValidationErrors:',
+    hasValidationErrors,
+    'Current validation errors:',
+    validationErrors
+  )
+
   const { setPriceImpact, setPriceImpactLevel } = usePriceImpact()
   console.log('SwapProvider.tsx _useSwap setPriceImpact:', setPriceImpact)
 

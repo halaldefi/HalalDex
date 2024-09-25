@@ -10,24 +10,42 @@ export function _useTokenInputsValidation() {
   const [validationErrors, setValidationErrors] = useState<ValidationErrorsByToken>({})
 
   function setValidationError(tokenAddress: Address, value: string) {
+    console.log(`Setting validation error for token ${tokenAddress}: ${value}`)
     validationErrors[tokenAddress] = value
     setValidationErrors({ ...validationErrors })
+    console.log('Updated validation errors:', validationErrors)
   }
 
   function hasValidationError(token: GqlToken | undefined) {
-    return !!getValidationError(token)
+    const result = !!getValidationError(token)
+    console.log(`Checking validation error for token ${token?.address}: ${result}`)
+    return result
   }
 
   function getValidationError(token: GqlToken | undefined): string {
-    if (!token) return ''
+    if (!token) {
+      console.log('getValidationError: Token is undefined')
+      return ''
+    }
     const error = validationErrors[token.address as Address]
+    console.log(`Getting validation error for token ${token.address}: ${error || 'No error'}`)
     if (!error) return ''
     return error
   }
 
-  const hasValidationErrors = Object.values(validationErrors).some(error => error !== '')
+  console.log('Current validationErrors:', validationErrors)
+  const hasValidationErrors = Object.values(validationErrors).some(
+    error => error !== '' && error !== undefined
+  )
+  console.log('Calculated hasValidationErrors:', hasValidationErrors)
 
-  return { setValidationError, getValidationError, hasValidationError, hasValidationErrors }
+  return {
+    setValidationError,
+    getValidationError,
+    hasValidationError,
+    hasValidationErrors,
+    validationErrors, // Add this line to expose validationErrors
+  }
 }
 
 export type Result = ReturnType<typeof _useTokenInputsValidation>

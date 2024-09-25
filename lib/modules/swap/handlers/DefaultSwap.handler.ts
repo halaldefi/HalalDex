@@ -85,7 +85,7 @@ export class DefaultSwapHandler implements SwapHandler {
     const sellSwapAmount = scaleTokenAmount(swapAmount, sellTokenInfo)
     const buySwapAmount = scaleTokenAmount(swapAmount, buyTokenInfo)
 
-    const getScaledSwapAmount = (sellSwapAmount: BigInt, buySwapAmount: BigInt) =>
+    const getScaledSwapAmount = (sellSwapAmount: bigint, buySwapAmount: bigint) =>
       params.swapType === GqlSorSwapType.ExactIn ? sellSwapAmount : buySwapAmount || BigInt(0)
     const newSwapAmount = getScaledSwapAmount(sellSwapAmount, buySwapAmount)
     // convert swap amount to base units
