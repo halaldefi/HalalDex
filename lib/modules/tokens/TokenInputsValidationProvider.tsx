@@ -10,15 +10,15 @@ export function _useTokenInputsValidation() {
   const [validationErrors, setValidationErrors] = useState<ValidationErrorsByToken>({})
 
   function setValidationError(tokenAddress: Address, value: string) {
-    console.log(`Setting validation error for token ${tokenAddress}: ${value}`)
+    // console.log(`Setting validation error for token ${tokenAddress}: ${value}`)
     validationErrors[tokenAddress] = value
     setValidationErrors({ ...validationErrors })
-    console.log('Updated validation errors:', validationErrors)
+    // console.log('Updated validation errors:', validationErrors)
   }
 
   function hasValidationError(token: GqlToken | undefined) {
     const result = !!getValidationError(token)
-    console.log(`Checking validation error for token ${token?.address}: ${result}`)
+    // console.log(`Checking validation error for token ${token?.address}: ${result}`)
     return result
   }
 
@@ -28,7 +28,7 @@ export function _useTokenInputsValidation() {
       return ''
     }
     const error = validationErrors[token.address as Address]
-    console.log(`Getting validation error for token ${token.address}: ${error || 'No error'}`)
+    // console.log(`Getting validation error for token ${token.address}: ${error || 'No error'}`)
     if (!error) return ''
     return error
   }
@@ -37,7 +37,7 @@ export function _useTokenInputsValidation() {
   const hasValidationErrors = Object.values(validationErrors).some(
     error => error !== '' && error !== undefined
   )
-  console.log('Calculated hasValidationErrors:', hasValidationErrors)
+  // console.log('Calculated hasValidationErrors:', hasValidationErrors)
 
   return {
     setValidationError,

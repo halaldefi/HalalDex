@@ -78,8 +78,13 @@ export type PathParams = {
   urlTxHash?: Hash
 }
 
-function selectSwapHandler(chain: GqlChain, feeRecipient: string, affiliateFee: number) {
-  return new DefaultSwapHandler(chain, feeRecipient, affiliateFee)
+function selectSwapHandler(
+  chain: GqlChain,
+  feeRecipient: string,
+  affiliateFee: number,
+  getToken: (address: string, chain: GqlChain) => GqlToken | undefined
+) {
+  return new DefaultSwapHandler(chain, feeRecipient, affiliateFee, getToken)
 }
 
 export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
@@ -135,8 +140,8 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   const previewModalDisclosure = useDisclosure()
   console.log('SwapProvider.tsx _useSwap previewModalDisclosure:', previewModalDisclosure)
   const handler = useMemo(
-    () => selectSwapHandler(swapState.selectedChain, FEE_RECIPIENT, 100),
-    [swapState.selectedChain, FEE_RECIPIENT, AFFILIATE_FEE]
+    () => selectSwapHandler(swapState.selectedChain, FEE_RECIPIENT, 100, getToken),
+    [swapState.selectedChain, FEE_RECIPIENT, AFFILIATE_FEE, getToken]
   )
   console.log('SwapProvider.tsx _useSwap handler:', handler)
 

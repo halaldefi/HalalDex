@@ -17,9 +17,13 @@ export class DefaultSwapHandler implements SwapHandler {
   name = 'DefaultSwapHandler'
   private getToken: (address: string, chain: GqlChain) => GqlToken | undefined
 
-  constructor(private chain: GqlChain, private feeRecipient: string, private affiliateFee: number) {
+  constructor(
+    private chain: GqlChain,
+    private feeRecipient: string,
+    private affiliateFee: number,
+    getToken: (address: string, chain: GqlChain) => GqlToken | undefined
+  ) {
     console.log('DefaultSwapHandler initialized')
-    const { getToken } = useTokens()
     this.getToken = getToken
   }
 
