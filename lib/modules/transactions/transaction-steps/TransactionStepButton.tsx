@@ -26,18 +26,18 @@ interface Props {
 
 export function TransactionStepButton({ step, isLoading, isDisabled }: Props) {
   const { chainId, simulation, labels, executeAsync } = step
-  console.log('TransactionStepButton', { step })
+  // console.log('TransactionStepButton', { step })
   const [executionError, setExecutionError] = useState<Error>()
   const { isConnected } = useUserAccount()
   const { shouldChangeNetwork, NetworkSwitchButton, networkSwitchButtonProps } =
     useChainSwitch(chainId)
-  console.log('TransactionStepButton _useChainSwitch shouldChangeNetwork ', {
+  /*   console.log('TransactionStepButton _useChainSwitch shouldChangeNetwork ', {
     step,
     isConnected,
     shouldChangeNetwork,
     NetworkSwitchButton,
     networkSwitchButtonProps,
-  })
+  }) */
   const isTransactButtonVisible = isConnected
   const transactionState = getTransactionState(step)
   const isButtonLoading =

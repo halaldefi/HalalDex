@@ -12,5 +12,5 @@ export function silenceConsoleLog(vi: typeof vitest, silenceRulesCallback: (s: s
 }
 
 export function logRawObject(reactiveObject: object) {
-  console.log(inspect(reactiveObject))
+  // console.log(inspect(reactiveObject))
 }

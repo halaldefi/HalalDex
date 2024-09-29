@@ -11,12 +11,12 @@ export async function GET(request: NextRequest) {
     })
     const data = await res.json()
 
-    console.log('price api', `https://api.0x.org/swap/permit2/price?${searchParams}`)
+    // console.log('price api', `https://api.0x.org/swap/permit2/price?${searchParams}`)
 
-    console.log('price data', data)
+    // console.log('price data', data)
 
     return Response.json(data)
   } catch (error) {
-    console.log(error)
+    // console.log(error)
   }
 }

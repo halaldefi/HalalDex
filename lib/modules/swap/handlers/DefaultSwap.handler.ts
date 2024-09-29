@@ -23,7 +23,7 @@ export class DefaultSwapHandler implements SwapHandler {
     private affiliateFee: number,
     getToken: (address: string, chain: GqlChain) => GqlToken | undefined
   ) {
-    console.log('DefaultSwapHandler initialized')
+    // console.log('DefaultSwapHandler initialized')
     this.getToken = getToken
   }
 
@@ -83,7 +83,7 @@ export class DefaultSwapHandler implements SwapHandler {
     const { tokenIn, tokenOut, swapAmount, swapType, userAddress } = params
 
     if (!userAddress) {
-      console.log('params', params)
+      // console.log('params', params)
       throw new Error('User address (taker) is required for getQuote')
     }
 
@@ -113,8 +113,8 @@ export class DefaultSwapHandler implements SwapHandler {
     }
 
     try {
-      console.log('Getting quote...')
-      console.log('quoteParams:', quoteParams)
+      // console.log('Getting quote...')
+      // console.log('quoteParams:', quoteParams)
       const response = await fetch(`/api/quote?${qs.stringify(quoteParams)}`, {
         method: 'GET',
         headers: {

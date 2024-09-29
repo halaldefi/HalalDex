@@ -36,7 +36,7 @@ export function useSwapStep({
   tokenOutInfo,
 }: SwapStepParams): TransactionStep {
   const { getTransaction } = useTransactionState()
-  console.log('useSwapStep getTransaction', getTransaction(swapStepId))
+  // console.log('useSwapStep getTransaction', getTransaction(swapStepId))
   const { refetchBalances } = useTokenBalances()
 
   const quoteInputs: SimulateSwapInputs = {
@@ -50,16 +50,16 @@ export function useSwapStep({
     swapType: swapState.swapType,
     userAddress: swapState.userAddress,
   }
-  console.log('quoteInputs', quoteInputs)
+  // console.log('quoteInputs', quoteInputs)
 
   const {
     data: quoteData,
     isLoading: isQuoteLoading,
     error: quoteError,
   } = use0xQuote(handler, quoteInputs)
-  console.log('quoteData', quoteData)
-  console.log('quoteError', quoteError)
-  console.log('isQuoteLoading', isQuoteLoading)
+  // console.log('quoteData', quoteData)
+  // console.log('quoteError', quoteError)
+  // console.log('isQuoteLoading', isQuoteLoading)
 
   const labels: TransactionLabels = {
     init: capitalize(swapAction),
@@ -77,11 +77,11 @@ export function useSwapStep({
   const transaction = getTransaction(swapStepId)
 
   const isComplete = () => transaction?.result.isSuccess || false
-  console.log('useSwapStep transaction', transaction)
-  console.log('useSwapStep quoteData', quoteData)
-  console.log('useSwapStep quoteError', quoteError)
-  console.log('useSwapStep isQuoteLoading', isQuoteLoading)
-  console.log('useSwapStep isComplete', isComplete())
+  // console.log('useSwapStep transaction', transaction)
+  // console.log('useSwapStep quoteData', quoteData)
+  // console.log('useSwapStep quoteError', quoteError)
+  // console.log('useSwapStep isQuoteLoading', isQuoteLoading)
+  // console.log('useSwapStep isComplete', isComplete())
   return useMemo(
     () => ({
       id: swapStepId,

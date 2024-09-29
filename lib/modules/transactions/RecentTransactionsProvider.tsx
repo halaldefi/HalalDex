@@ -190,7 +190,7 @@ export function _useRecentTransactions() {
     // seems like we couldn't find this transaction in the cache
     // TODO discuss behaviour around this
     if (!cachedTransaction) {
-      console.log({ hash, transactions })
+      // console.log({ hash, transactions })
       throw new Error('Cannot update a cached tracked transaction that does not exist.')
     }
 

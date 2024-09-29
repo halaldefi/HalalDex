@@ -3,7 +3,7 @@ import { SimulateSwapInputs } from '../swap.types'
 import { SwapHandler } from '../handlers/Swap.handler'
 
 export function use0xQuote(handler: SwapHandler, inputs: SimulateSwapInputs) {
-  console.log('use0xQuote', inputs)
+  // console.log('use0xQuote', inputs)
   return useQuery({
     queryKey: ['0xQuote', inputs],
     queryFn: () => handler.getQuote(inputs),

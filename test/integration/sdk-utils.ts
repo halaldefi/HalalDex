@@ -279,7 +279,7 @@ export async function getSdkTestUtils({
       _slots = await Promise.all(
         tokens.map(async (token, i) => findTokenBalanceSlot(account, token, isVyperMapping[i]))
       )
-      console.log(`slots: ${_slots}`)
+      // console.log(`slots: ${_slots}`)
     }
 
     for (let i = 0; i < tokens.length; i++) {

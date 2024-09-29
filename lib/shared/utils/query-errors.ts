@@ -217,7 +217,7 @@ export function captureSentryError(
   e: unknown,
   { context, errorMessage, errorName }: SentryMetadata
 ) {
-  console.log('Context en captureSentryError', context)
+  // console.log('Context en captureSentryError', context)
   const causeError = ensureError(e)
   if (isUserRejectedError(causeError)) return
 

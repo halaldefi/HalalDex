@@ -36,21 +36,21 @@ export function ManagedSendTransactionButton({
   quoteData,
   ...params
 }: { id: string; quoteData: any } & Omit<ManagedSendTransactionInput, 'txConfig'>) {
-  console.log('ManagedSendTransactionButton params', params)
-  console.log('ManagedSendTransactionButton quoteData', quoteData)
+  // console.log('ManagedSendTransactionButton params', params)
+  // console.log('ManagedSendTransactionButton quoteData', quoteData)
 
   const transaction = useManagedSendTransaction({
     ...params,
     quoteData,
   })
-  console.log('ManagedSendTransactionButton transaction', transaction)
+  // console.log('ManagedSendTransactionButton transaction', transaction)
 
   const { updateTransaction } = useTransactionState()
 
   useEffect(() => {
     updateTransaction(id, transaction)
   }, [id, transaction.execution.status, transaction.simulation.status, transaction.result.status])
-  console.log('labels', params.labels)
+  // console.log('labels', params.labels)
   return <TransactionStepButton step={{ labels: params.labels, ...transaction }} />
 }
 

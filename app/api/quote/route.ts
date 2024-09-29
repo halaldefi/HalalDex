@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   })
   const data = await res.json()
 
-  console.log('quote api', `https://api.0x.org/swap/permit2/quote?${searchParams}`)
+  // console.log('quote api', `https://api.0x.org/swap/permit2/quote?${searchParams}`)
 
   return Response.json(data)
 }

@@ -57,7 +57,7 @@ export function useAddLiquidityBuildCallDataQuery({
       queryOutput,
       relayerApprovalSignature, // only present in Add Nested Liquidity with sign relayer mode
     })
-    console.log('Call data built:', response)
+    // console.log('Call data built:', response)
     return response
   }
 

@@ -45,7 +45,7 @@ export function useSimulateSwapQuery({
     affiliateFee,
   }
 
-  console.log('useSimulateSwapQuery inputs:', inputs)
+  // console.log('useSimulateSwapQuery inputs:', inputs)
 
   const chainId = getChainId(chain)
   const { data: blockNumber } = useBlockNumber({ chainId })

@@ -66,7 +66,7 @@ export function useRemoveLiquidityBuildCallDataQuery({
       wethIsEth,
     })
 
-    console.log('Call data built:', res)
+    // console.log('Call data built:', res)
     return res
   }
 

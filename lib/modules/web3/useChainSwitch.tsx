@@ -10,7 +10,7 @@ import { useUserAccount } from './UserAccountProvider'
 export function useChainSwitch(chainId: SupportedChainId) {
   const { chain: connectedChain } = useUserAccount()
   const { isPending, switchChain } = useSwitchChain()
-  console.log('useChainSwitch', { chainId, connectedChain })
+  // console.log('useChainSwitch', { chainId, connectedChain })
   const shouldChangeNetwork = chainId !== connectedChain?.id
 
   const networkSwitchButtonProps = {

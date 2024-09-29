@@ -24,7 +24,7 @@ export function _useTokenInputsValidation() {
 
   function getValidationError(token: GqlToken | undefined): string {
     if (!token) {
-      console.log('getValidationError: Token is undefined')
+      // console.log('getValidationError: Token is undefined')
       return ''
     }
     const error = validationErrors[token.address as Address]
@@ -33,7 +33,7 @@ export function _useTokenInputsValidation() {
     return error
   }
 
-  console.log('Current validationErrors:', validationErrors)
+  // console.log('Current validationErrors:', validationErrors)
   const hasValidationErrors = Object.values(validationErrors).some(
     error => error !== '' && error !== undefined
   )

@@ -45,8 +45,8 @@ export function useManagedSendTransaction({
 }: ManagedSendTransactionInput) {
   // Extract chainId from quoteData or use mainnet as default
   const chainId = quoteData.permit2.eip712.domain.chainId || mainnet.id
-  console.log('useManagedSendTransaction:quoteData', quoteData)
-  console.log('useManagedSendTransaction:chainId', chainId)
+  // console.log('useManagedSendTransaction:quoteData', quoteData)
+  // console.log('useManagedSendTransaction:chainId', chainId)
 
   // Hook to check if network change is needed
   const { shouldChangeNetwork } = useChainSwitch(chainId)
@@ -54,11 +54,11 @@ export function useManagedSendTransaction({
   const { minConfirmations } = useNetworkConfig()
   // Hook to update tracked transactions
   const { updateTrackedTransaction } = useRecentTransactions()
-  console.log('useManagedSendTransaction:shouldChangeNetwork', shouldChangeNetwork)
+  // console.log('useManagedSendTransaction:shouldChangeNetwork', shouldChangeNetwork)
 
   // Hook for signing typed data (EIP-712)
   const { signTypedDataAsync } = useSignTypedData()
-  console.log('useManagedSendTransaction:signTypedDataAsync', signTypedDataAsync)
+  // console.log('useManagedSendTransaction:signTypedDataAsync', signTypedDataAsync)
 
   // Prepare transaction config
   const txConfig: TransactionConfig = {
@@ -72,11 +72,11 @@ export function useManagedSendTransaction({
 
   // Hook for sending the transaction
   const writeMutation = useSendTransaction()
-  console.log('useManagedSendTransaction:writeMutation', writeMutation)
+  // console.log('useManagedSendTransaction:writeMutation', writeMutation)
 
   // Get transaction hash and loading state
   const { txHash, isSafeTxLoading } = useTxHash({ chainId, wagmiTxHash: writeMutation.data })
-  console.log('useManagedSendTransaction:txHash', txHash)
+  // console.log('useManagedSendTransaction:txHash', txHash)
   // Hook to wait for transaction receipt
   const transactionStatusQuery = useWaitForTransactionReceipt({
     chainId,
@@ -98,7 +98,7 @@ export function useManagedSendTransaction({
     isSafeTxLoading,
   }
   useEffect(() => {
-    console.log('Current txHash:', txHash)
+    // console.log('Current txHash:', txHash)
   }, [txHash])
 
   // Effect to handle successful transaction submission
@@ -146,9 +146,9 @@ export function useManagedSendTransaction({
     hash: bundle.result.data?.transactionHash,
   })
   useEffect(() => {
-    console.log('Transaction Receipt Status:', transactionStatusQuery.status)
-    console.log('Transaction Receipt Data:', transactionStatusQuery.data)
-    console.log('Transaction Receipt Error:', transactionStatusQuery.error)
+    // console.log('Transaction Receipt Status:', transactionStatusQuery.status)
+    // console.log('Transaction Receipt Data:', transactionStatusQuery.data)
+    // console.log('Transaction Receipt Error:', transactionStatusQuery.error)
   }, [transactionStatusQuery])
 
   /**
@@ -171,7 +171,7 @@ export function useManagedSendTransaction({
             primaryType: quoteData.permit2.eip712.primaryType,
             message: quoteData.permit2.eip712.message,
           })
-          console.log('Signed Permit2 message from quoteData')
+          // console.log('Signed Permit2 message from quoteData')
         } catch (error) {
           console.error('Error signing Permit2 message:', error)
           throw error
