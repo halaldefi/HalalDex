@@ -19,7 +19,9 @@ import { mainnet } from 'viem/chains'
 import { useTxHash } from '../safe.hooks'
 import { getWaitForReceiptTimeout } from './wagmi-helpers'
 import { onlyExplicitRefetch } from '@/lib/shared/utils/queries'
-import { SendTransactionParameters } from 'wagmi'
+import { SendTransactionParameters } from 'wagmi/actions'
+import { useSignTypedData } from 'wagmi'
+import { numberToHex, concat, hexToBytes } from 'viem/utils'
 
 export type ManagedSendTransactionInput = {
   labels: TransactionLabels
@@ -39,7 +41,8 @@ export function useManagedSendTransaction({
   const { minConfirmations } = useNetworkConfig()
   const { updateTrackedTransaction } = useRecentTransactions()
   console.log('useManagedSendTransaction:shouldChangeNetwork', shouldChangeNetwork)
-
+  const { signTypedDataAsync } = useSignTypedData()
+  console.log('useManagedSendTransaction:signTypedDataAsync', signTypedDataAsync)
   const txConfig: TransactionConfig = {
     chainId,
     to: quoteData.transaction.to,
@@ -132,6 +135,42 @@ export function useManagedSendTransaction({
   const managedSendAsync = async () => {
     if (!txConfig.to || !txConfig.gas) return
     try {
+      // Check if Permit2 EIP-712 data is available
+      if (quoteData.permit2?.eip712) {
+        let signature: `0x${string}` | undefined
+        try {
+          // Sign the EIP-712 Permit2 message
+          signature = await signTypedDataAsync({
+            domain: quoteData.permit2.eip712.domain,
+            types: quoteData.permit2.eip712.types,
+            primaryType: quoteData.permit2.eip712.primaryType,
+            message: quoteData.permit2.eip712.message,
+          })
+          console.log('Signed Permit2 message from quoteData')
+        } catch (error) {
+          console.error('Error signing Permit2 message:', error)
+          throw error
+        }
+
+        // Append signature length and signature data to txConfig.data
+        if (signature && txConfig.data) {
+          const signatureBytes = hexToBytes(signature)
+          const signatureLengthInHex = numberToHex(signatureBytes.length, {
+            signed: false,
+            size: 32,
+          })
+
+          const transactionData = txConfig.data as `0x${string}`
+          const sigLengthHex = signatureLengthInHex as `0x${string}`
+          const sig = signature as `0x${string}`
+
+          txConfig.data = concat([transactionData, sigLengthHex, sig])
+        } else {
+          throw new Error('Failed to obtain signature or transaction data')
+        }
+      }
+
+      // Proceed to send the transaction
       const sendTransactionParams: SendTransactionParameters = {
         chainId,
         to: txConfig.to as `0x${string}`,

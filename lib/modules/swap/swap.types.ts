@@ -43,6 +43,8 @@ export interface SimulateSwapResponse0x {
   swapType: GqlSorSwapType
   effectivePrice: string
   effectivePriceReversed: string
+  swap: Swap
+  queryOutput: any
 }
 
 export interface SimulateSwapResponse {

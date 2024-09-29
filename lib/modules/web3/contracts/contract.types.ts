@@ -29,7 +29,7 @@ export type WriteAbiMutability = 'payable' | 'nonpayable'
 export type ReadAbiMutability = 'view'
 
 export type TransactionConfig = {
-  account: Address
+  account?: Address
   chainId: SupportedChainId
   data: Hex
   to: Address
