@@ -43,7 +43,7 @@ export function useManagedTransaction({
 }: ManagedTransactionInput) {
   const { minConfirmations } = useNetworkConfig()
   const { shouldChangeNetwork } = useChainSwitch(chainId)
-
+  console.log('useManagedTransaction:shouldChangeNetwork', shouldChangeNetwork)
   const simulateQuery = useSimulateContract({
     abi: AbiMap[contractId] as Abi,
     address: contractAddress as Address,

@@ -33,29 +33,24 @@ export function ManagedTransactionButton({
 
 export function ManagedSendTransactionButton({
   id,
+  quoteData,
   ...params
-}: { id: string } & ManagedSendTransactionInput) {
-  console.log('ManagedSendTransactionButton', params)
-  console.log('ManagedSendTransactionButton', id)
-  // Ensure that gas is provided in txConfig
-  const txConfigWithGas = {
-    ...params.txConfig,
-    gas: BigInt(5000000),
-  }
+}: { id: string; quoteData: any } & Omit<ManagedSendTransactionInput, 'txConfig'>) {
+  console.log('ManagedSendTransactionButton params', params)
+  console.log('ManagedSendTransactionButton quoteData', quoteData)
+
   const transaction = useManagedSendTransaction({
     ...params,
-    txConfig: txConfigWithGas,
+    quoteData,
   })
-  console.log('ManagedSendTransactionButton', transaction)
+  console.log('ManagedSendTransactionButton transaction', transaction)
+
   const { updateTransaction } = useTransactionState()
 
   useEffect(() => {
     updateTransaction(id, transaction)
   }, [id, transaction.execution.status, transaction.simulation.status, transaction.result.status])
-  if (!txConfigWithGas.gas) {
-    console.warn('Gas not provided in txConfig. This may lead to inaccurate gas estimation.')
-  }
-
+  console.log('labels', params.labels)
   return <TransactionStepButton step={{ labels: params.labels, ...transaction }} />
 }
 

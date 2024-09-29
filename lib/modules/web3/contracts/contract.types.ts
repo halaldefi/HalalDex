@@ -34,6 +34,7 @@ export type TransactionConfig = {
   data: Hex
   to: Address
   value?: bigint
+  gas?: bigint
 }
 
 export type Erc20Abi = typeof erc20Abi

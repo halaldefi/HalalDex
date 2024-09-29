@@ -89,6 +89,8 @@ function selectSwapHandler(
 
 export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   console.log('SwapProvider.tsx _useSwap pathParams:', pathParams)
+
+  const { isConnected, userAddress } = useUserAccount()
   const swapStateVar = useMakeVarPersisted<SwapState>(
     {
       tokenIn: {
@@ -103,7 +105,7 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
       },
       swapType: GqlSorSwapType.ExactIn,
       selectedChain: GqlChain.Mainnet,
-      userAddress: emptyAddress,
+      userAddress: userAddress || emptyAddress,
     },
     'swapState'
   )
@@ -115,7 +117,6 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   console.log('SwapProvider.tsx _useSwap tokenSelectKey:', tokenSelectKey)
   const [initUserChain, setInitUserChain] = useState<GqlChain | undefined>(undefined)
   console.log('SwapProvider.tsx _useSwap initUserChain:', initUserChain)
-  const { isConnected } = useUserAccount()
   const data = useUserAccount()
   console.log('SwapProvider.tsx _useSwap data useUserAccount:', data)
   const { chain: walletChain } = useNetworkConfig()
@@ -171,6 +172,15 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
       userAddress: data.userAddress,
     })
   }
+  useEffect(() => {
+    if (data.userAddress && data.userAddress !== swapState.userAddress) {
+      swapStateVar({
+        ...swapState,
+        userAddress: data.userAddress,
+      })
+    }
+  }, [data.userAddress])
+
   console.log('usdValueForToken:tokenInInfo', tokenInInfo, swapState.tokenIn.amount)
   console.log('usdValueForToken:tokenOutInfo', tokenOutInfo, swapState.tokenOut.amount)
 
@@ -343,7 +353,7 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
     }
   }
 
-  function getDefaultTokenState(chain: GqlChain) {
+  function getDefaultTokenState(chain: GqlChain): SwapState {
     const {
       tokens: { defaultSwapTokens },
     } = getNetworkConfig(chain)
@@ -360,6 +370,7 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
         ...swapState.tokenOut,
         address: tokenOut ? tokenOut : emptyAddress,
       },
+      userAddress: data.userAddress || emptyAddress,
     }
   }
 
@@ -446,6 +457,7 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   /**
    * Step construction
    */
+  console.log('SwapProvider.tsx _useSwap swapState:', swapState)
   const { steps, isLoadingSteps } = useSwapSteps({
     vaultAddress,
     swapState,
@@ -458,7 +470,7 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   })
 
   const transactionSteps = useTransactionSteps(steps, isLoadingSteps)
-
+  console.log('SwapProvider.tsx _useSwap transactionSteps:', transactionSteps)
   const swapTxHash = urlTxHash || transactionSteps.lastTransaction?.result?.data?.transactionHash
   const swapTxConfirmed = transactionSteps.lastTransactionConfirmed
 

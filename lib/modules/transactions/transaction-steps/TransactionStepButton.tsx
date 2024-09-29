@@ -3,26 +3,35 @@
 import { ConnectWallet } from '@/lib/modules/web3/ConnectWallet'
 import { useUserAccount } from '@/lib/modules/web3/UserAccountProvider'
 import { Button, VStack } from '@chakra-ui/react'
-import { ManagedResult, TransactionLabels, TransactionState, getTransactionState } from './lib'
+import {
+  ManagedResult,
+  TransactionLabels,
+  TransactionState,
+  TransactionStep,
+  getTransactionState,
+} from './lib'
 import { useChainSwitch } from '@/lib/modules/web3/useChainSwitch'
 import { GenericError } from '@/lib/shared/components/errors/GenericError'
 import { getGqlChain } from '@/lib/config/app.config'
 import { TransactionTimeoutError } from '@/lib/shared/components/errors/TransactionTimeoutError'
 import { useState } from 'react'
 import { ensureError } from '@/lib/shared/utils/errors'
+import { TransactionBundle } from '../../web3/contracts/contract.types'
 
 interface Props {
   step: { labels: TransactionLabels } & ManagedResult
+  isLoading?: boolean
+  isDisabled?: boolean
 }
 
-export function TransactionStepButton({ step }: Props) {
+export function TransactionStepButton({ step, isLoading, isDisabled }: Props) {
   const { chainId, simulation, labels, executeAsync } = step
   console.log('TransactionStepButton', { step })
   const [executionError, setExecutionError] = useState<Error>()
   const { isConnected } = useUserAccount()
   const { shouldChangeNetwork, NetworkSwitchButton, networkSwitchButtonProps } =
     useChainSwitch(chainId)
-  console.log('TransactionStepButton', {
+  console.log('TransactionStepButton _useChainSwitch shouldChangeNetwork ', {
     step,
     isConnected,
     shouldChangeNetwork,

@@ -33,7 +33,7 @@ export class DefaultSwapHandler implements SwapHandler {
     swapAmount,
     swapType,
     userAddress,
-  }: SimulateSwapInputs): Promise<SimulateSwapResponse0x> {
+  }: SimulateSwapInputs & { userAddress: string }): Promise<SimulateSwapResponse0x> {
     const params = {
       chainId: getChainId(this.chain),
       sellToken: tokenIn.address,
@@ -81,6 +81,12 @@ export class DefaultSwapHandler implements SwapHandler {
 
   async getQuote(params: SimulateSwapInputs): Promise<any> {
     const { tokenIn, tokenOut, swapAmount, swapType, userAddress } = params
+
+    if (!userAddress) {
+      console.log('params', params)
+      throw new Error('User address (taker) is required for getQuote')
+    }
+
     const sellTokenInfo = this.getToken(tokenIn.address, this.chain)
     const buyTokenInfo = this.getToken(tokenOut.address, this.chain)
     if (!sellTokenInfo || !buyTokenInfo) {
@@ -107,6 +113,8 @@ export class DefaultSwapHandler implements SwapHandler {
     }
 
     try {
+      console.log('Getting quote...')
+      console.log('quoteParams:', quoteParams)
       const response = await fetch(`/api/quote?${qs.stringify(quoteParams)}`)
       const data = await response.json()
 

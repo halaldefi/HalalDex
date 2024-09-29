@@ -52,6 +52,10 @@ type Props = {
 }
 
 export function ActionModalFooter({ isSuccess, currentStep, returnLabel, returnAction }: Props) {
+  console.log('ActionModalFooter.tsx isSuccess:', isSuccess)
+  console.log('ActionModalFooter.tsx currentStep:', currentStep)
+  console.log('ActionModalFooter.tsx returnLabel:', returnLabel)
+  console.log('ActionModalFooter.tsx returnAction:', returnAction)
   return (
     <ModalFooter>
       <AnimatePresence mode="wait" initial={false}>

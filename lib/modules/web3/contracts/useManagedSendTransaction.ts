@@ -19,37 +19,47 @@ import { mainnet } from 'viem/chains'
 import { useTxHash } from '../safe.hooks'
 import { getWaitForReceiptTimeout } from './wagmi-helpers'
 import { onlyExplicitRefetch } from '@/lib/shared/utils/queries'
+import { SendTransactionParameters } from 'wagmi'
 
 export type ManagedSendTransactionInput = {
   labels: TransactionLabels
-  txConfig: TransactionConfig & { gas?: bigint }
+  quoteData: any
   gasEstimationMeta?: Record<string, unknown>
 }
 
 export function useManagedSendTransaction({
   labels,
-  txConfig,
+  quoteData,
   gasEstimationMeta,
 }: ManagedSendTransactionInput) {
-  // chainId will always have the correct value as the transaction is disabled when txConfig is undefined
-  console.log('useManagedSendTransaction', txConfig)
-  const chainId = txConfig?.chainId || mainnet.id
+  const chainId = quoteData.permit2.eip712.domain.chainId || mainnet.id
+  console.log('useManagedSendTransaction:quoteData', quoteData)
+  console.log('useManagedSendTransaction:chainId', chainId)
   const { shouldChangeNetwork } = useChainSwitch(chainId)
   const { minConfirmations } = useNetworkConfig()
   const { updateTrackedTransaction } = useRecentTransactions()
+  console.log('useManagedSendTransaction:shouldChangeNetwork', shouldChangeNetwork)
+
+  const txConfig: TransactionConfig = {
+    chainId,
+    to: quoteData.transaction.to,
+    data: quoteData.transaction.data,
+    value: quoteData.transaction.value,
+    gas: BigInt(quoteData.transaction.gas),
+    account: quoteData.transaction.account,
+  }
 
   const writeMutation = useSendTransaction({
     mutation: {
       meta: sentryMetaForWagmiExecution('Error sending transaction', {
-        txConfig,
-        estimatedGas: txConfig.gas,
+        quoteData,
+        estimatedGas: quoteData.transaction.gas,
         tenderlyUrl: gasEstimationMeta?.tenderlyUrl,
       }),
     },
   })
 
   const { txHash, isSafeTxLoading } = useTxHash({ chainId, wagmiTxHash: writeMutation.data })
-
   const transactionStatusQuery = useWaitForTransactionReceipt({
     chainId,
     hash: txHash,
@@ -59,7 +69,11 @@ export function useManagedSendTransaction({
 
   const bundle = {
     chainId,
-    simulation: { data: txConfig.gas, isLoading: false, isError: false } as TransactionSimulation, // Mocked simulation result
+    simulation: {
+      data: quoteData.transaction.gas,
+      isLoading: false,
+      isError: false,
+    } as TransactionSimulation,
     execution: writeMutation as TransactionExecution,
     result: transactionStatusQuery,
     isSafeTxLoading,
@@ -116,20 +130,21 @@ export function useManagedSendTransaction({
   })
 
   const managedSendAsync = async () => {
-    if (!txConfig?.to || !txConfig.gas) return
-    if (!txConfig?.to) return
+    if (!txConfig.to || !txConfig.gas) return
     try {
-      return writeMutation.sendTransactionAsync({
+      const sendTransactionParams: SendTransactionParameters = {
         chainId,
-        to: txConfig.to,
-        data: txConfig.data,
+        to: txConfig.to as `0x${string}`,
+        data: txConfig.data as `0x${string}`,
         value: txConfig.value,
         gas: txConfig.gas,
-      })
+        account: txConfig.account as `0x${string}`,
+      }
+      return writeMutation.sendTransactionAsync(sendTransactionParams)
     } catch (e: unknown) {
       captureWagmiExecutionError(e, 'Error in send transaction execution', {
         chainId,
-        txConfig,
+        quoteData,
         gas: txConfig.gas,
       })
       throw e

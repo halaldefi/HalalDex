@@ -22,7 +22,7 @@ export type SwapState = {
   tokenOut: SwapTokenInput
   swapType: GqlSorSwapType
   selectedChain: GqlChain
-  userAddress?: Address
+  userAddress: Address
 }
 
 export type SimulateSwapInputs = {

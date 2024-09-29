@@ -87,7 +87,7 @@ export function SwapSummary({
           tokenAddress={shouldShowReceipt ? receivedToken.tokenAddress : tokenOut.address}
         />
       </Card>
-
+      <p>SwapSummary</p>
       {!shouldShowReceipt && !isWrapComplete && (
         <>
           <CardPopAnim key="swap-details">

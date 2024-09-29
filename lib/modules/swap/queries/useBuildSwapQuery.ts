@@ -33,6 +33,7 @@ export function useBuildSwapQuery({
   enabled: boolean
 }) {
   const { userAddress, isConnected } = useUserAccount()
+  console.log('userAddress:', userAddress)
   const { slippage } = useUserSettings()
   const { selectedChain, tokenIn, tokenOut, swapType } = swapState
   const chainId = getChainId(selectedChain)
@@ -53,10 +54,19 @@ export function useBuildSwapQuery({
   })
 
   const queryFn = async () => {
+    console.log('Building swap query...')
     if (!simulationQuery.data) {
+      console.log('Simulation data is not available')
       throw new Error('Simulation data is not available')
     }
 
+    console.log('Getting quote...')
+    // only go ahead if userAddress is set
+    if (!userAddress) {
+      console.log('User address is not available')
+      throw new Error('User address is not available')
+    }
+    console.log('User address is available:', userAddress)
     const quoteResponse = await handler.getQuote({
       tokenIn,
       tokenOut,
@@ -65,10 +75,12 @@ export function useBuildSwapQuery({
       userAddress,
       chain: selectedChain,
     })
+    console.log('Quote response:', quoteResponse)
 
+    console.log('Building transaction...')
     const transactionConfig = handler.buildTransaction(quoteResponse)
+    console.log('Transaction config:', transactionConfig)
 
-    console.log('Swap callData built:', transactionConfig)
     return transactionConfig
   }
 

@@ -81,6 +81,7 @@ export function SwapPreviewModal({
         />
         <ModalCloseButton />
         <ModalBody>
+          <p>SwapPreviewModal</p>
           <SwapSummary {...swapReceipt} />
         </ModalBody>
         <ActionModalFooter
