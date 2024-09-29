@@ -71,19 +71,12 @@ export function useManagedSendTransaction({
   }
 
   // Hook for sending the transaction
-  const writeMutation = useSendTransaction({
-    mutation: {
-      meta: sentryMetaForWagmiExecution('Error sending transaction', {
-        quoteData,
-        estimatedGas: quoteData.transaction.gas,
-        tenderlyUrl: gasEstimationMeta?.tenderlyUrl,
-      }),
-    },
-  })
+  const writeMutation = useSendTransaction()
+  console.log('useManagedSendTransaction:writeMutation', writeMutation)
 
   // Get transaction hash and loading state
   const { txHash, isSafeTxLoading } = useTxHash({ chainId, wagmiTxHash: writeMutation.data })
-
+  console.log('useManagedSendTransaction:txHash', txHash)
   // Hook to wait for transaction receipt
   const transactionStatusQuery = useWaitForTransactionReceipt({
     chainId,
@@ -104,6 +97,9 @@ export function useManagedSendTransaction({
     result: transactionStatusQuery,
     isSafeTxLoading,
   }
+  useEffect(() => {
+    console.log('Current txHash:', txHash)
+  }, [txHash])
 
   // Effect to handle successful transaction submission
   useEffect(() => {
@@ -149,6 +145,11 @@ export function useManagedSendTransaction({
     status: bundle.result.data?.status,
     hash: bundle.result.data?.transactionHash,
   })
+  useEffect(() => {
+    console.log('Transaction Receipt Status:', transactionStatusQuery.status)
+    console.log('Transaction Receipt Data:', transactionStatusQuery.data)
+    console.log('Transaction Receipt Error:', transactionStatusQuery.error)
+  }, [transactionStatusQuery])
 
   /**
    * Asynchronous function to manage the transaction sending process
@@ -156,6 +157,8 @@ export function useManagedSendTransaction({
    */
   const managedSendAsync = async () => {
     if (!txConfig.to || !txConfig.gas) return
+    const updatedTxConfig = { ...txConfig }
+
     try {
       // Check if Permit2 EIP-712 data is available
       if (quoteData.permit2?.eip712) {
@@ -175,18 +178,18 @@ export function useManagedSendTransaction({
         }
 
         // Append signature length and signature data to txConfig.data
-        if (signature && txConfig.data) {
+        if (signature && updatedTxConfig.data) {
           const signatureBytes = hexToBytes(signature)
           const signatureLengthInHex = numberToHex(signatureBytes.length, {
             signed: false,
             size: 32,
           })
 
-          const transactionData = txConfig.data as `0x${string}`
+          const transactionData = updatedTxConfig.data as `0x${string}`
           const sigLengthHex = signatureLengthInHex as `0x${string}`
           const sig = signature as `0x${string}`
 
-          txConfig.data = concat([transactionData, sigLengthHex, sig])
+          updatedTxConfig.data = concat([transactionData, sigLengthHex, sig])
         } else {
           throw new Error('Failed to obtain signature or transaction data')
         }
@@ -195,11 +198,11 @@ export function useManagedSendTransaction({
       // Prepare transaction parameters
       const sendTransactionParams: SendTransactionParameters = {
         chainId,
-        to: txConfig.to as `0x${string}`,
-        data: txConfig.data as `0x${string}`,
-        value: txConfig.value,
-        gas: txConfig.gas,
-        account: txConfig.account as `0x${string}`,
+        to: updatedTxConfig.to as `0x${string}`,
+        data: updatedTxConfig.data as `0x${string}`,
+        value: updatedTxConfig.value,
+        gas: updatedTxConfig.gas,
+        account: updatedTxConfig.account as `0x${string}`,
       }
 
       // Send the transaction
@@ -208,7 +211,7 @@ export function useManagedSendTransaction({
       captureWagmiExecutionError(e, 'Error in send transaction execution', {
         chainId,
         quoteData,
-        gas: txConfig.gas,
+        gas: updatedTxConfig.gas,
       })
       throw e
     }
