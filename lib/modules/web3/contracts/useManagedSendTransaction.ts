@@ -23,26 +23,44 @@ import { SendTransactionParameters } from 'wagmi/actions'
 import { useSignTypedData } from 'wagmi'
 import { numberToHex, concat, hexToBytes } from 'viem/utils'
 
+/**
+ * Input type for the useManagedSendTransaction hook
+ */
 export type ManagedSendTransactionInput = {
   labels: TransactionLabels
   quoteData: any
   gasEstimationMeta?: Record<string, unknown>
 }
 
+/**
+ * A custom hook for managing the process of sending a transaction, including signing, submitting, and monitoring.
+ *
+ * @param {ManagedSendTransactionInput} input - The input parameters for the hook
+ * @returns {ManagedResult} An object containing the transaction bundle and execution function
+ */
 export function useManagedSendTransaction({
   labels,
   quoteData,
   gasEstimationMeta,
 }: ManagedSendTransactionInput) {
+  // Extract chainId from quoteData or use mainnet as default
   const chainId = quoteData.permit2.eip712.domain.chainId || mainnet.id
   console.log('useManagedSendTransaction:quoteData', quoteData)
   console.log('useManagedSendTransaction:chainId', chainId)
+
+  // Hook to check if network change is needed
   const { shouldChangeNetwork } = useChainSwitch(chainId)
+  // Get minimum confirmations required from network config
   const { minConfirmations } = useNetworkConfig()
+  // Hook to update tracked transactions
   const { updateTrackedTransaction } = useRecentTransactions()
   console.log('useManagedSendTransaction:shouldChangeNetwork', shouldChangeNetwork)
+
+  // Hook for signing typed data (EIP-712)
   const { signTypedDataAsync } = useSignTypedData()
   console.log('useManagedSendTransaction:signTypedDataAsync', signTypedDataAsync)
+
+  // Prepare transaction config
   const txConfig: TransactionConfig = {
     chainId,
     to: quoteData.transaction.to,
@@ -52,6 +70,7 @@ export function useManagedSendTransaction({
     account: quoteData.transaction.account,
   }
 
+  // Hook for sending the transaction
   const writeMutation = useSendTransaction({
     mutation: {
       meta: sentryMetaForWagmiExecution('Error sending transaction', {
@@ -62,7 +81,10 @@ export function useManagedSendTransaction({
     },
   })
 
+  // Get transaction hash and loading state
   const { txHash, isSafeTxLoading } = useTxHash({ chainId, wagmiTxHash: writeMutation.data })
+
+  // Hook to wait for transaction receipt
   const transactionStatusQuery = useWaitForTransactionReceipt({
     chainId,
     hash: txHash,
@@ -70,6 +92,7 @@ export function useManagedSendTransaction({
     timeout: getWaitForReceiptTimeout(chainId),
   })
 
+  // Prepare transaction bundle
   const bundle = {
     chainId,
     simulation: {
@@ -82,29 +105,24 @@ export function useManagedSendTransaction({
     isSafeTxLoading,
   }
 
-  // when the transaction is successfully submitted to the chain
-  // start monitoring the hash
-  //
-  // when the transaction has an execution error, update that within
-  // the global transaction cache too
+  // Effect to handle successful transaction submission
   useEffect(() => {
     if (bundle?.execution?.data) {
-      // add transaction here
+      // TODO: Add transaction to monitoring or cache
     }
   }, [bundle.execution?.data])
 
-  // when the transaction has an execution error, update that within
-  // the global transaction cache
-  // this can either be an execution error or a confirmation error
+  // Effect to handle transaction execution errors
   useEffect(() => {
     if (bundle?.execution?.error) {
-      // monitor execution error here
+      // TODO: Monitor execution error
     }
     if (bundle?.result?.error) {
-      // monitor confirmation error here
+      // TODO: Monitor confirmation error
     }
   }, [bundle.execution?.error, bundle.result?.error])
 
+  // Effect to handle transaction timeout
   useEffect(() => {
     if (transactionStatusQuery.error) {
       if (txHash) {
@@ -118,20 +136,24 @@ export function useManagedSendTransaction({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactionStatusQuery.error])
 
-  // on successful submission to chain, add tx to cache
+  // Hook to handle successful transaction submission
   useOnTransactionSubmission({
     labels,
     hash: txHash,
     chain: getGqlChain(chainId),
   })
 
-  // on confirmation, update tx in tx cache
+  // Hook to handle transaction confirmation
   useOnTransactionConfirmation({
     labels,
     status: bundle.result.data?.status,
     hash: bundle.result.data?.transactionHash,
   })
 
+  /**
+   * Asynchronous function to manage the transaction sending process
+   * @returns {Promise<void>}
+   */
   const managedSendAsync = async () => {
     if (!txConfig.to || !txConfig.gas) return
     try {
@@ -170,7 +192,7 @@ export function useManagedSendTransaction({
         }
       }
 
-      // Proceed to send the transaction
+      // Prepare transaction parameters
       const sendTransactionParams: SendTransactionParameters = {
         chainId,
         to: txConfig.to as `0x${string}`,
@@ -179,6 +201,8 @@ export function useManagedSendTransaction({
         gas: txConfig.gas,
         account: txConfig.account as `0x${string}`,
       }
+
+      // Send the transaction
       return writeMutation.sendTransactionAsync(sendTransactionParams)
     } catch (e: unknown) {
       captureWagmiExecutionError(e, 'Error in send transaction execution', {
@@ -190,6 +214,7 @@ export function useManagedSendTransaction({
     }
   }
 
+  // Return the transaction bundle and execution function
   return {
     ...bundle,
     executeAsync: managedSendAsync,
