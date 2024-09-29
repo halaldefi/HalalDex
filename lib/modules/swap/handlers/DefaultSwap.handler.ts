@@ -115,7 +115,14 @@ export class DefaultSwapHandler implements SwapHandler {
     try {
       console.log('Getting quote...')
       console.log('quoteParams:', quoteParams)
-      const response = await fetch(`/api/quote?${qs.stringify(quoteParams)}`)
+      const response = await fetch(`/api/quote?${qs.stringify(quoteParams)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache', // Prevent caching
+        },
+        cache: 'no-store', // Additional cache prevention
+      })
       const data = await response.json()
 
       if (data.validationErrors?.length > 0) {
