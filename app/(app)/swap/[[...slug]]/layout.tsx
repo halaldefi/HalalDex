@@ -11,7 +11,6 @@ import { PropsWithChildren } from 'react'
 import { PriceImpactProvider } from '@/lib/modules/price-impact/PriceImpactProvider'
 import { DefaultPageContainer } from '@/lib/shared/components/containers/DefaultPageContainer'
 import { getSwapPathParams } from './getSwapPathParams'
-import { RelayerSignatureProvider } from '@/lib/modules/relayer/RelayerSignatureProvider'
 
 type Props = PropsWithChildren<{
   params: { slug?: string[] }
@@ -29,15 +28,13 @@ export default function SwapLayout({ params: { slug }, children }: Props) {
   return (
     <DefaultPageContainer minH="100vh">
       <TransactionStateProvider>
-        <RelayerSignatureProvider>
-          <TokenInputsValidationProvider>
-            <TokenBalancesProvider initTokens={initTokens}>
-              <PriceImpactProvider>
-                <SwapProvider pathParams={{ ...pathParams }}>{children}</SwapProvider>
-              </PriceImpactProvider>
-            </TokenBalancesProvider>
-          </TokenInputsValidationProvider>
-        </RelayerSignatureProvider>
+        <TokenInputsValidationProvider>
+          <TokenBalancesProvider initTokens={initTokens}>
+            <PriceImpactProvider>
+              <SwapProvider pathParams={{ ...pathParams }}>{children}</SwapProvider>
+            </PriceImpactProvider>
+          </TokenBalancesProvider>
+        </TokenInputsValidationProvider>
       </TransactionStateProvider>
     </DefaultPageContainer>
   )
