@@ -44,7 +44,7 @@ export function useManagedSendTransaction({
   gasEstimationMeta,
 }: ManagedSendTransactionInput) {
   // Extract chainId from quoteData or use mainnet as default
-  const chainId = quoteData.permit2.eip712.domain.chainId || mainnet.id
+  const chainId = quoteData?.permit2?.eip712?.domain?.chainId || mainnet.id
   // console.log('useManagedSendTransaction:quoteData', quoteData)
   // console.log('useManagedSendTransaction:chainId', chainId)
 
@@ -60,14 +60,14 @@ export function useManagedSendTransaction({
   const { signTypedDataAsync } = useSignTypedData()
   // console.log('useManagedSendTransaction:signTypedDataAsync', signTypedDataAsync)
 
-  // Prepare transaction config
+  // Prepare transaction config with null checks
   const txConfig: TransactionConfig = {
     chainId,
-    to: quoteData.transaction.to,
-    data: quoteData.transaction.data,
-    value: quoteData.transaction.value,
-    gas: BigInt(quoteData.transaction.gas),
-    account: quoteData.transaction.account,
+    to: quoteData?.transaction?.to,
+    data: quoteData?.transaction?.data,
+    value: quoteData?.transaction?.value,
+    gas: quoteData?.transaction?.gas ? BigInt(quoteData.transaction.gas) : undefined,
+    account: quoteData?.transaction?.account,
   }
 
   // Hook for sending the transaction
@@ -89,7 +89,7 @@ export function useManagedSendTransaction({
   const bundle = {
     chainId,
     simulation: {
-      data: quoteData.transaction.gas,
+      data: quoteData?.transaction?.gas,
       isLoading: false,
       isError: false,
     } as TransactionSimulation,
@@ -161,7 +161,7 @@ export function useManagedSendTransaction({
 
     try {
       // Check if Permit2 EIP-712 data is available
-      if (quoteData.permit2?.eip712) {
+      if (quoteData?.permit2?.eip712) {
         let signature: `0x${string}` | undefined
         try {
           // Sign the EIP-712 Permit2 message

@@ -1,13 +1,9 @@
-import {
-  GqlChain,
-  GqlPoolTokenDisplay,
-  GqlToken,
-} from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain, GqlToken } from '@/lib/shared/services/api/generated/graphql'
 import { Box, HStack, StackProps } from '@chakra-ui/react'
 import { TokenIcon } from './TokenIcon'
 
 type Props = {
-  tokens: GqlPoolTokenDisplay[] | GqlToken[]
+  tokens: GqlToken[]
   chain: GqlChain
   size?: number
 }

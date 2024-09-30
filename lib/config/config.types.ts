@@ -1,9 +1,7 @@
 import { Address } from 'viem'
 import { GqlChain } from '../shared/services/api/generated/graphql'
 import { chains } from '@/lib/modules/web3/ChainConfig'
-import { PoolIssue } from '../modules/pool/alerts/pool-issues/PoolIssue.type'
 import { SupportedWrapHandler } from '../modules/swap/swap.types'
-import { PartnerVariant } from '../modules/pool/pool.types'
 
 export interface TokensConfig {
   addresses: {
@@ -44,10 +42,6 @@ export interface ContractsConfig {
   veDelegationProxy?: Address
   veBAL?: Address
 }
-export interface PoolsConfig {
-  issues: Partial<Record<PoolIssue, string[]>>
-  allowNestedActions?: string[] // pool ids
-}
 
 export interface BlockExplorerConfig {
   baseUrl: string
@@ -67,7 +61,6 @@ export interface NetworkConfig {
   tokens: TokensConfig
   contracts: ContractsConfig
   minConfirmations?: number
-  pools?: PoolsConfig
 }
 
 export interface Config {
@@ -83,16 +76,9 @@ interface Banners {
   footerSrc: string
 }
 
-type VariantConfig = {
-  [key in PartnerVariant]: {
-    banners?: Banners
-  }
-}
-
 export interface ProjectConfig {
   projectId: 'beets' | 'balancer'
   projectName: string
   supportedNetworks: GqlChain[]
   corePoolId: string // this prop is used to adjust the color of the SparklesIcon
-  variantConfig?: VariantConfig
 }

@@ -40,6 +40,7 @@ import {
 import { useTokenInputsValidation } from '../tokens/TokenInputsValidationProvider'
 import { useMakeVarPersisted } from '@/lib/shared/hooks/useMakeVarPersisted'
 import { HumanAmount } from '@balancer/sdk'
+import { ChainSlug, chainToSlugMap, slugToChainMap } from '../pool/pool.utils'
 import { invert } from 'lodash'
 import { useTransactionSteps } from '../transactions/transaction-steps/useTransactionSteps'
 import { useTokenBalances } from '../tokens/TokenBalancesProvider'
@@ -399,11 +400,13 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   function replaceUrlPath() {
     const { selectedChain, tokenIn, tokenOut, swapType } = swapState
     const { popularTokens } = networkConfig.tokens
+    const chainSlug = chainToSlugMap[selectedChain]
     const newPath = ['/swap']
 
     const _tokenIn = selectByAddress(popularTokens || {}, tokenIn.address) || tokenIn.address
     const _tokenOut = selectByAddress(popularTokens || {}, tokenOut.address) || tokenOut.address
 
+    if (chainSlug) newPath.push(`/${chainSlug}`)
     if (_tokenIn) newPath.push(`/${_tokenIn}`)
     if (_tokenIn && _tokenOut) newPath.push(`/${_tokenOut}`)
     if (_tokenIn && _tokenOut && tokenIn.amount && swapType === GqlSorSwapType.ExactIn) {
@@ -498,7 +501,10 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   }
 
   function setInitialChain(slugChain?: string) {
-    const _chain = walletChain
+    const _chain =
+      slugChain && slugToChainMap[slugChain as ChainSlug]
+        ? slugToChainMap[slugChain as ChainSlug]
+        : walletChain
 
     setSelectedChain(_chain)
     // console.log('SwapProvider.tsx _useSwap setInitialChain _chain:', _chain)

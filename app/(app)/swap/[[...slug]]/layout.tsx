@@ -1,5 +1,6 @@
 'use client'
 
+import { ChainSlug, slugToChainMap } from '@/lib/modules/pool/pool.utils'
 import { SwapProvider } from '@/lib/modules/swap/SwapProvider'
 import { TokenBalancesProvider } from '@/lib/modules/tokens/TokenBalancesProvider'
 import { TokenInputsValidationProvider } from '@/lib/modules/tokens/TokenInputsValidationProvider'
@@ -19,7 +20,9 @@ export default function SwapLayout({ params: { slug }, children }: Props) {
   const pathParams = getSwapPathParams(slug)
 
   const { getTokensByChain } = useTokens()
-  const initChain = GqlChain.Mainnet
+  const initChain = pathParams.chain
+    ? slugToChainMap[pathParams.chain as ChainSlug]
+    : GqlChain.Mainnet
   const initTokens = getTokensByChain(initChain)
 
   return (
