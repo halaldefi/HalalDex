@@ -132,7 +132,7 @@ function NavActions() {
         display: { base: 'none', lg: 'block' },
       },
       {
-        el: <ConnectWallet />,
+        el: <ThirdwebConnectButton />,
         display: { base: 'block', lg: 'block' },
       },
       {

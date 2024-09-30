@@ -26,12 +26,12 @@ const connectors = connectorsForWallets(
       groupName: 'Recommended',
       wallets: [
         // metaMaskWallet must appear above injectedWallet to avoid random disconnection issues
-        metaMaskWallet,
+        /* metaMaskWallet,
         safeWallet,
         walletConnectWallet,
         rabbyWallet,
         coinbaseWallet,
-        rainbowWallet,
+        rainbowWallet, */
         injectedWallet,
       ],
     },
