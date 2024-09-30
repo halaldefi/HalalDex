@@ -9,11 +9,9 @@ import { useBreakpoints } from '@/lib/shared/hooks/useBreakpoints'
 import { capitalize } from 'lodash'
 import { ActionModalFooter } from '../../../shared/components/modals/ActionModalFooter'
 import { TransactionModalHeader } from '../../../shared/components/modals/TransactionModalHeader'
-import { chainToSlugMap } from '../../pool/pool.utils'
 // eslint-disable-next-line max-len
 import { getStylesForModalContentWithStepTracker } from '../../transactions/transaction-steps/step-tracker/step-tracker.utils'
 import { SuccessOverlay } from '@/lib/shared/components/modals/SuccessOverlay'
-import { useResetStepIndexOnOpen } from '../../pool/actions/useResetStepIndexOnOpen'
 import { useOnUserAccountChanged } from '../../web3/useOnUserAccountChanged'
 import { SwapSummary } from './SwapSummary'
 import { useSwapReceipt } from '../../transactions/transaction-steps/receipts/receipt.hooks'
@@ -45,13 +43,8 @@ export function SwapPreviewModal({
     chain: selectedChain,
   })
 
-  useResetStepIndexOnOpen(isOpen, transactionSteps)
-
   useEffect(() => {
-    if (!isWrap && swapTxHash && !window.location.pathname.includes(swapTxHash)) {
-      window.history.pushState({}, '', `/swap/${chainToSlugMap[selectedChain]}/${swapTxHash}`)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    console.log('SwapPreviewModal swapTxHash:', swapTxHash)
   }, [swapTxHash])
 
   useOnUserAccountChanged(onClose)

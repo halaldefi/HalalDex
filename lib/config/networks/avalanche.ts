@@ -1,7 +1,6 @@
 import { GqlChain } from '@/lib/shared/services/api/generated/graphql'
 import { NetworkConfig } from '../config.types'
 import { convertHexToLowerCase } from '@/lib/shared/utils/objects'
-import { PoolIssue } from '@/lib/modules/pool/alerts/pool-issues/PoolIssue.type'
 import { CSP_ISSUE_POOL_IDS } from '@/lib/shared/data/csp-issue'
 
 const networkConfig: NetworkConfig = {
@@ -47,16 +46,6 @@ const networkConfig: NetworkConfig = {
     },
     veDelegationProxy: '0x0c6052254551EAe3ECac77B01DFcf1025418828f',
   },
-  pools: convertHexToLowerCase({
-    issues: {
-      [PoolIssue.CspPoolVulnWarning]: CSP_ISSUE_POOL_IDS[GqlChain.Avalanche],
-      [PoolIssue.FxPoolVulnWarning]: [
-        '0x55bec22f8f6c69137ceaf284d9b441db1b9bfedc000200000000000000000011',
-        '0x66bb9d104c55861feb3ec3559433f01f6373c96600020000000000000000002a',
-        '0xad0e5e0778cac28f1ff459602b31351871b5754a000200000000000000000029',
-      ],
-    },
-  }),
 }
 
 export default networkConfig

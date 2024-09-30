@@ -7,11 +7,6 @@ import {
 } from '@sentry/types'
 import { SentryError, ensureError } from './errors'
 import { isUserRejectedError } from './error-filters'
-import {
-  AddLiquidityParams,
-  stringifyHumanAmountsIn,
-} from '@/lib/modules/pool/actions/add-liquidity/queries/add-liquidity-keys'
-import { RemoveLiquidityParams } from '@/lib/modules/pool/actions/remove-liquidity/queries/remove-liquidity-keys'
 import { SimulateSwapParams } from '@/lib/modules/swap/queries/useSimulateSwapQuery'
 import { isProd } from '@/lib/config/app.config'
 import { SwapState } from '@/lib/modules/swap/swap.types'
@@ -26,19 +21,6 @@ export type SentryMetadata = {
   errorMessage: string
   errorName?: string
   context?: Partial<ScopeContext>
-}
-
-type AddMetaParams = AddLiquidityParams & { chainId: number; blockNumber?: bigint }
-export function sentryMetaForAddLiquidityHandler(errorMessage: string, params: AddMetaParams) {
-  return createAddHandlerMetadata('HandlerQueryError', errorMessage, params)
-}
-
-type RemoveMetaParams = RemoveLiquidityParams & { chainId: number; blockNumber?: bigint }
-export function sentryMetaForRemoveLiquidityHandler(
-  errorMessage: string,
-  params: RemoveMetaParams
-) {
-  return createRemoveHandlerMetadata('HandlerQueryError', errorMessage, params)
 }
 
 export type SwapBuildCallExtras = {
@@ -114,35 +96,10 @@ export function createFatalErrorMetadata(errorName: string, errorMessage: string
 /**
  * Creates sentry metadata for errors in add liquidity handlers
  */
-function createAddHandlerMetadata(
-  errorName: string,
-  errorMessage: string,
-  params: AddLiquidityParams
-) {
-  const extra: Extras = {
-    handler: params.handler.constructor.name,
-    params: {
-      ...params,
-      humanAmountsIn: stringifyHumanAmountsIn(params.poolType, params.humanAmountsIn),
-    },
-  }
-  return createFatalMetadata(errorName, errorMessage, extra)
-}
 
 /**
  * Creates sentry metadata for errors in remove liquidity handlers
  */
-function createRemoveHandlerMetadata(
-  errorName: string,
-  errorMessage: string,
-  params: RemoveMetaParams
-) {
-  const extra: Extras = {
-    handler: params.handler.constructor.name,
-    params,
-  }
-  return createFatalMetadata(errorName, errorMessage, extra)
-}
 
 /**
  * Creates sentry metadata for errors in swap handlers

@@ -12,8 +12,6 @@ import { ReactNode, useEffect, useState } from 'react'
 import { TokenIcon } from '../TokenIcon'
 import { useCurrency } from '@/lib/shared/hooks/useCurrency'
 import { Numberish, fNum, isZero } from '@/lib/shared/utils/numbers'
-import { Pool } from '../../pool/PoolProvider'
-import { bptUsdValue } from '../../pool/pool.helpers'
 import { TokenInfoPopover } from '../TokenInfoPopover'
 import { ChevronDown } from 'react-feather'
 import { BullseyeIcon } from '@/lib/shared/components/icons/BullseyeIcon'
@@ -24,7 +22,6 @@ type DataProps = {
   chain: GqlChain
   token?: GqlToken
   displayToken?: GqlPoolTokenDisplay
-  pool?: Pool
   disabled?: boolean
   showSelect?: boolean
   showInfoPopover?: boolean
@@ -36,14 +33,13 @@ function TokenInfo({
   chain,
   token,
   displayToken,
-  pool,
   disabled,
   showSelect = false,
   showInfoPopover = true,
   isBpt = false,
 }: DataProps) {
-  const tokenSymbol = isBpt ? 'LP token' : token?.symbol || pool?.symbol || displayToken?.symbol
-  const tokenName = isBpt ? pool?.name : token?.name || displayToken?.name
+  const tokenSymbol = isBpt ? 'LP token' : token?.symbol || displayToken?.symbol
+  const tokenName = isBpt ? undefined : token?.name || displayToken?.name
 
   return (
     <HStack spacing="sm">
@@ -89,7 +85,6 @@ type Props = {
   isLoading?: boolean
   abbreviated?: boolean
   isBpt?: boolean
-  pool?: Pool
   showZeroAmountAsDash?: boolean
   toggleTokenSelect?: () => void
 }
@@ -104,7 +99,6 @@ export default function TokenRow({
   disabled,
   isLoading,
   isBpt,
-  pool,
   abbreviated = true,
   showZeroAmountAsDash = false,
   toggleTokenSelect,
@@ -114,7 +108,7 @@ export default function TokenRow({
   const [amount, setAmount] = useState<string>('')
   const [usdValue, setUsdValue] = useState<string | undefined>(undefined)
   const token = getToken(address, chain)
-  const displayToken = pool?.displayTokens.find(t => isSameAddress(t.address, address))
+  const displayToken = undefined
 
   // TokenRowTemplate default props
   const props = {
@@ -122,15 +116,12 @@ export default function TokenRow({
     chain,
     token,
     displayToken,
-    pool,
     disabled,
   }
 
   useEffect(() => {
     if (value) {
-      if (isBpt && pool) {
-        setUsdValue(bptUsdValue(pool, value))
-      } else if (token) {
+      if (token) {
         setUsdValue(usdValueForToken(token, value))
       }
 

@@ -67,7 +67,7 @@ export interface NetworkConfig {
   tokens: TokensConfig
   contracts: ContractsConfig
   minConfirmations?: number
-  pools: PoolsConfig
+  pools?: PoolsConfig
 }
 
 export interface Config {

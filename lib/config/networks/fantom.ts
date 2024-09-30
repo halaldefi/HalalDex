@@ -37,7 +37,6 @@ const networkConfig: NetworkConfig = {
       minter: zeroAddress,
     },
   },
-  pools: convertHexToLowerCase({ issues: {} }),
 }
 
 export default networkConfig
