@@ -15,26 +15,10 @@ export function useNav() {
 
   const appLinks = [
     {
-      href: '/pools',
-      label: 'Pools',
-    },
-    {
       href: swapHref,
       label: 'Swap',
     },
-    {
-      href: '/portfolio',
-      label: 'Portfolio',
-    },
   ]
-
-  // To-do: Remove this when veBAL is live
-  if (isDev || isStaging) {
-    appLinks.push({
-      href: '/vebal',
-      label: 'veBAL (wip)',
-    })
-  }
 
   const ecosystemLinks = [
     { label: 'Build', href: 'https://balancer.fi/build' },
