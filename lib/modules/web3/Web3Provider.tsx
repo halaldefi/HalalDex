@@ -98,9 +98,9 @@ export function Web3Provider({
 
   return (
     <ReactQueryClientProvider>
-      <ThirdwebProvider>
-        <WagmiProvider config={wagmiConfig}>
-          <RainbowKitProvider theme={customTheme} avatar={CustomAvatar}>
+      <WagmiProvider config={wagmiConfig}>
+        <RainbowKitProvider theme={customTheme} avatar={CustomAvatar}>
+          <ThirdwebProvider>
             <UserAccountProvider>
               <UserSettingsProvider
                 initCurrency={undefined}
@@ -114,9 +114,9 @@ export function Web3Provider({
                 <AcceptPoliciesModal />
               </UserSettingsProvider>
             </UserAccountProvider>
-          </RainbowKitProvider>
-        </WagmiProvider>
-      </ThirdwebProvider>
+          </ThirdwebProvider>
+        </RainbowKitProvider>
+      </WagmiProvider>
     </ReactQueryClientProvider>
   )
 }

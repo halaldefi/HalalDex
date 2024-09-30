@@ -1,10 +1,10 @@
 'use client'
 
-import { Chain } from '@rainbow-me/rainbowkit'
 import {
   arbitrum,
   avalanche,
   base,
+  Chain as WagmiChain,
   fantom,
   fraxtal,
   gnosis,
@@ -15,6 +15,10 @@ import {
   polygonZkEvm,
   sepolia,
 } from 'wagmi/chains'
+
+export interface Chain extends WagmiChain {
+  iconUrl?: string
+}
 
 import { getProjectConfig } from '@/lib/config/getProjectConfig'
 import { GqlChain } from '@/lib/shared/services/api/generated/graphql'

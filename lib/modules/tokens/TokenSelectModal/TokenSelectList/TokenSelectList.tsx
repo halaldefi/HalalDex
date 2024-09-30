@@ -113,6 +113,7 @@ export function TokenSelectList({
     searchTerm
   )
   const { openConnectModal } = useConnectModal()
+  console.log('TokenSelectList.tsx orderedTokens:', orderedTokens)
 
   const tokensWithBalance = isConnected
     ? orderedTokens.filter(token => balanceFor(token)?.amount)

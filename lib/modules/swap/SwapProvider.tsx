@@ -91,6 +91,8 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   // console.log('SwapProvider.tsx _useSwap pathParams:', pathParams)
 
   const { isConnected, userAddress } = useUserAccount()
+  console.log('SwapProvider.tsx _useSwap isConnected:', isConnected)
+  console.log('SwapProvider.tsx _useSwap userAddress:', userAddress)
   const swapStateVar = useMakeVarPersisted<SwapState>(
     {
       tokenIn: {
