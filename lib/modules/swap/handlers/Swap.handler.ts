@@ -1,4 +1,3 @@
-import { ApolloClient } from '@apollo/client'
 import { TransactionConfig } from '../../web3/contracts/contract.types'
 import {
   BuildSwapInputs,
@@ -13,7 +12,6 @@ import { GqlToken } from '@/lib/shared/services/api/generated/graphql'
  * They take standard inputs from the UI and return frontend standardised outputs.
  */
 export interface SwapHandler {
-  apolloClient?: ApolloClient<object>
   tokens?: GqlToken[]
   name: string
 
