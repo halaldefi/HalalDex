@@ -121,8 +121,8 @@ export function TokenSelectList({
   const tokensWithoutBalance = orderedTokens.filter(token => !tokensWithBalance.includes(token))
   const tokensToShow = [...tokensWithBalance, ...tokensWithoutBalance]
 
-  const isCurrentToken = (token: GqlToken) =>
-    currentToken && isSameAddress(token.address, currentToken)
+  const isCurrentToken = (token: GqlToken): boolean =>
+    !!currentToken && isSameAddress(token.address, currentToken)
 
   const groups = [
     <InYourWallet
