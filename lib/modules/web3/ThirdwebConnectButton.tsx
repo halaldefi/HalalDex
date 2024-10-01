@@ -5,7 +5,7 @@ import { Box, Button } from '@chakra-ui/react'
 
 export function ThirdwebConnectButton() {
   return (
-    <Button variant="tertiary" p="0">
+    <Button variant="tertiary">
       <ConnectButton
         client={client}
         theme={darkTheme({
@@ -15,13 +15,21 @@ export function ThirdwebConnectButton() {
             connectedButtonBg: '#464d58',
           },
         })}
+        detailsButton={{
+          style: {
+            height: '100%',
+            background: 'transparent',
+            alignItems: 'center',
+            border: 'none',
+            justifyContent: 'flex-start',
+          },
+        }}
         connectButton={{
           label: 'Connect Wallet',
           style: {
-            height: '40px',
+            height: '100%',
             background: 'transparent',
             minWidth: '132px',
-            width: '132px',
           },
         }}
         appMetadata={{
