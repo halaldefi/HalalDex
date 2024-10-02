@@ -45,10 +45,10 @@ export function SwapDetails() {
   const { priceImpactLevel, priceImpactColor, PriceImpactIcon, priceImpact } = usePriceImpact()
 
   const isDefaultSwap = handler instanceof DefaultSwapHandler
-  const isNativeWrapOrUnwrap = handler instanceof NativeWrapHandler
+  // const isNativeWrapOrUnwrap = handler instanceof NativeWrapHandler
 
-  const _slippage = isNativeWrapOrUnwrap ? 0 : slippage
-  const _slippageDecimal = isNativeWrapOrUnwrap ? 0 : slippageDecimal
+  const _slippage = slippage
+  const _slippageDecimal = slippageDecimal
 
   const returnAmountUsd =
     swapType === GqlSorSwapType.ExactIn
