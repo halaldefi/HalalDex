@@ -107,6 +107,8 @@ export function _useTokens(
   function usdValueForToken(token: GqlToken | undefined, amount: Numberish) {
     if (!token) return '0'
     if (amount === '') return '0'
+    if (amount === '0') return '0'
+    if (amount === undefined) return '0'
     return bn(amount).times(priceForToken(token)).toFixed()
   }
 

@@ -71,11 +71,6 @@ export interface Config {
   }
 }
 
-interface Banners {
-  headerSrc: string
-  footerSrc: string
-}
-
 export interface ProjectConfig {
   projectId: 'beets' | 'balancer'
   projectName: string

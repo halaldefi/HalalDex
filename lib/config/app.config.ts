@@ -49,6 +49,7 @@ export function getNativeAsset(chainId: GqlChain | SupportedChainId) {
 }
 
 export function getNativeAssetAddress(chainId: GqlChain | SupportedChainId) {
+  // console.log(getNetworkConfig(chainId).tokens.nativeAsset.address)
   return getNetworkConfig(chainId).tokens.nativeAsset.address
 }
 

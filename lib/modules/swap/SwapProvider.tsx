@@ -4,9 +4,9 @@
 import { getNetworkConfig } from '@/lib/config/app.config'
 import { GqlChain, GqlSorSwapType, GqlToken } from '@/lib/shared/services/api/generated/graphql'
 import { useMandatoryContext } from '@/lib/shared/utils/contexts'
-import { ApolloClient, useApolloClient, useReactiveVar } from '@apollo/client'
+import { useReactiveVar } from '@apollo/client'
 import { PropsWithChildren, createContext, useEffect, useMemo, useState } from 'react'
-import { Address, formatUnits, Hash, isAddress, parseUnits } from 'viem'
+import { Address, Hash, isAddress, parseUnits } from 'viem'
 import { emptyAddress } from '../web3/contracts/wagmi-helpers'
 import { useUserAccount } from '../web3/UserAccountProvider'
 import { LABELS } from '@/lib/shared/labels'
@@ -20,23 +20,13 @@ import { useSwapSteps } from './useSwapSteps'
 import {
   OSwapAction,
   SdkSimulateSwapResponse,
-  SimulateSwapResponse,
   SimulateSwapResponse0x,
   SwapAction,
   SwapState,
 } from './swap.types'
-import { SwapHandler } from './handlers/Swap.handler'
 import { isSameAddress, selectByAddress } from '@/lib/shared/utils/addresses'
 import { useVault } from '@/lib/shared/hooks/useVault'
-import { NativeWrapHandler } from './handlers/NativeWrap.handler'
-import {
-  getWrapHandlerClass,
-  getWrapType,
-  getWrapperForBaseToken,
-  isNativeWrap,
-  isSupportedWrap,
-  isWrapOrUnwrap,
-} from './wrap.helpers'
+import { getWrapType, getWrapperForBaseToken, isWrapOrUnwrap } from './wrap.helpers'
 import { useTokenInputsValidation } from '../tokens/TokenInputsValidationProvider'
 import { useMakeVarPersisted } from '@/lib/shared/hooks/useMakeVarPersisted'
 import { HumanAmount } from '@balancer/sdk'
@@ -47,8 +37,6 @@ import { useTokenBalances } from '../tokens/TokenBalancesProvider'
 import { useNetworkConfig } from '@/lib/config/useNetworkConfig'
 import { usePriceImpact } from '../price-impact/PriceImpactProvider'
 import { calcMarketPriceImpact } from '../price-impact/price-impact.utils'
-import { isAuraBalSwap } from './swap.helpers'
-import { AuraBalSwapHandler } from './handlers/AuraBalSwap.handler'
 import { AFFILIATE_FEE, FEE_RECIPIENT } from './constant'
 
 export type UseSwapResponse = ReturnType<typeof _useSwap>

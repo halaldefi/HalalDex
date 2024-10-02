@@ -17,6 +17,6 @@ export interface SwapHandler {
 
   simulate(inputs: SimulateSwapInputs): Promise<SimulateSwapResponse0x>
   build?(inputs: BuildSwapInputs): TransactionConfig
-  getQuote?(params: SimulateSwapInputs): Promise<any>
-  buildTransaction?(quoteResponse: any): TransactionConfig
+  getQuote(params: SimulateSwapInputs): Promise<any>
+  buildTransaction(quoteResponse: any): TransactionConfig
 }

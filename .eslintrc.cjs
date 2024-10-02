@@ -12,9 +12,12 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'next/core-web-vitals',
     'plugin:prettier/recommended',
+    'plugin:react-hooks/recommended',
+    'plugin:react/recommended',
+    'plugin:react/jsx-runtime',
   ],
 
-  plugins: ['@typescript-eslint', 'prettier'],
+  plugins: ['@typescript-eslint', 'prettier', 'eslint-plugin-react-compiler'],
 
   rules: {
     'prettier/prettier': 'warn',
@@ -23,6 +26,7 @@ module.exports = {
     'max-len': ['warn', { code: 120, ignoreComments: true, ignoreUrls: true }],
     '@typescript-eslint/no-explicit-any': ['off'],
     'no-html-link-for-pages': ['off'],
+    'react-compiler/react-compiler': 'error',
     'no-restricted-imports': [
       'error',
       {

@@ -43,8 +43,8 @@ export interface SimulateSwapResponse0x {
   swapType: GqlSorSwapType
   effectivePrice: string
   effectivePriceReversed: string
-  swap: Swap
-  queryOutput: any
+  swap?: Swap
+  queryOutput?: any
 }
 
 export interface SimulateSwapResponse {
@@ -128,10 +128,6 @@ export interface BuildSwapInputs extends SwapState {
 
 export interface SdkBuildSwapInputs extends BuildSwapInputs {
   simulateResponse: SdkSimulateSwapResponse
-}
-
-export interface AuraBalBuildSwapInputs extends BuildSwapInputs {
-  simulateResponse: AuraBalSimulateSwapResponse
 }
 
 export enum SupportedWrapHandler {
