@@ -41,6 +41,7 @@ export interface ContractsConfig {
   feeDistributor?: Address
   veDelegationProxy?: Address
   veBAL?: Address
+  permit2?: Address
 }
 
 export interface BlockExplorerConfig {
