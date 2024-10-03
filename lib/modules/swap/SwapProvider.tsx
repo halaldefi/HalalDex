@@ -78,9 +78,11 @@ function selectSwapHandler(
 export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   // console.log('SwapProvider.tsx _useSwap pathParams:', pathParams)
 
+  // const data = useUserAccount()
+  // console.log('SwapProvider.tsx _useSwap data useUserAccount:', data)
   const { isConnected, userAddress } = useUserAccount()
-  console.log('SwapProvider.tsx _useSwap isConnected:', isConnected)
-  console.log('SwapProvider.tsx _useSwap userAddress:', userAddress)
+  // console.log('SwapProvider.tsx _useSwap isConnected:', isConnected)
+  // console.log('SwapProvider.tsx _useSwap userAddress:', userAddress)
   const swapStateVar = useMakeVarPersisted<SwapState>(
     {
       tokenIn: {
@@ -107,8 +109,6 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   // console.log('SwapProvider.tsx _useSwap tokenSelectKey:', tokenSelectKey)
   const [initUserChain, setInitUserChain] = useState<GqlChain | undefined>(undefined)
   // console.log('SwapProvider.tsx _useSwap initUserChain:', initUserChain)
-  const data = useUserAccount()
-  // console.log('SwapProvider.tsx _useSwap data useUserAccount:', data)
   const { chain: walletChain } = useNetworkConfig()
   // console.log('SwapProvider.tsx _useSwap walletChain:', walletChain)
   const { getToken, getTokensByChain, usdValueForToken } = useTokens()
@@ -156,21 +156,14 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
   }
   const isUserAddressSet = swapState.userAddress !== emptyAddress
 
-  if (!isUserAddressSet) {
-    swapStateVar({
-      ...swapState,
-      userAddress: data.userAddress,
-    })
-  }
   useEffect(() => {
-    if (data.userAddress && data.userAddress !== swapState.userAddress) {
+    if (userAddress && userAddress !== swapState.userAddress) {
       swapStateVar({
         ...swapState,
-        userAddress: data.userAddress,
+        userAddress: userAddress,
       })
     }
-  }, [data.userAddress])
-
+  }, [userAddress, swapState.userAddress])
   // console.log('usdValueForToken:tokenInInfo', tokenInInfo, swapState.tokenIn.amount)
   // console.log('usdValueForToken:tokenOutInfo', tokenOutInfo, swapState.tokenOut.amount)
 
@@ -360,7 +353,7 @@ export function _useSwap({ urlTxHash, ...pathParams }: PathParams) {
         ...swapState.tokenOut,
         address: tokenOut ? tokenOut : emptyAddress,
       },
-      userAddress: data.userAddress || emptyAddress,
+      userAddress: userAddress || emptyAddress,
     }
   }
 
