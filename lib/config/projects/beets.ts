@@ -1,5 +1,5 @@
 import { ProjectConfig } from '@/lib/config/config.types'
-import { GqlChain } from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain } from '@/lib/modules/tokens/SupportedChains'
 
 export const beetsSupportedNetworks = [GqlChain.Fantom, GqlChain.Optimism]
 //  as const satisifies GqlChain[]

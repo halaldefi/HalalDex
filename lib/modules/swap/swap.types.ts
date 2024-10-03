@@ -1,8 +1,4 @@
-import {
-  GetSorSwapsQuery,
-  GqlChain,
-  GqlSorSwapType,
-} from '@/lib/shared/services/api/generated/graphql'
+import { GetSorSwapsQuery, GqlSorSwapType } from '@/lib/shared/services/api/generated/graphql'
 import {
   AuraBalSwapQueryOutput,
   ExactInQueryOutput,
@@ -10,6 +6,7 @@ import {
   Swap,
 } from '@balancer/sdk'
 import { Address, Hex } from 'viem'
+import { GqlChain } from '@/lib/modules/tokens/SupportedChains'
 
 export type SwapTokenInput = {
   address: Address

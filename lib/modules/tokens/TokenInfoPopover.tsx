@@ -1,5 +1,6 @@
 import { getBlockExplorerName, useBlockExplorer } from '@/lib/shared/hooks/useBlockExplorer'
-import { GqlChain } from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain } from '@/lib/modules/tokens/SupportedChains'
+
 import {
   HStack,
   IconButton,

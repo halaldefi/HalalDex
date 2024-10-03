@@ -1,4 +1,5 @@
-import { GqlChain } from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain } from '@/lib/modules/tokens/SupportedChains'
+
 import arbitrum from './arbitrum'
 import mainnet from './mainnet'
 import polygon from './polygon'

@@ -4,7 +4,9 @@ import {
   TransactionLabels,
   TransactionStep,
 } from '@/lib/modules/transactions/transaction-steps/lib'
-import { GqlSorSwapType, GqlToken } from '@/lib/shared/services/api/generated/graphql'
+import { GqlSorSwapType } from '@/lib/shared/services/api/generated/graphql'
+import { GqlToken } from '@/lib/modules/tokens/SupportedChains'
+
 import { sentryMetaForWagmiSimulation } from '@/lib/shared/utils/query-errors'
 import { VStack, Text } from '@chakra-ui/react' // Add Text import
 import { capitalize } from 'lodash'

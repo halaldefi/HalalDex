@@ -7,10 +7,10 @@ import {
   GetTokensDocument,
   GetTokensQuery,
   GetTokensQueryVariables,
-  GqlChain,
   GqlPoolTokenDetail,
-  GqlToken,
 } from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain, GqlToken } from '@/lib/modules/tokens/SupportedChains'
+
 import { isSameAddress } from '@/lib/shared/utils/addresses'
 import { useMandatoryContext } from '@/lib/shared/utils/contexts'
 import { bn, Numberish } from '@/lib/shared/utils/numbers'

@@ -1,5 +1,5 @@
 import { Address } from 'viem'
-import { GqlChain } from '../shared/services/api/generated/graphql'
+import { GqlChain } from '@/lib/modules/tokens/SupportedChains'
 import { chains } from '@/lib/modules/web3/ChainConfig'
 import { SupportedWrapHandler } from '../modules/swap/swap.types'
 

@@ -13,7 +13,8 @@ import {
 import { StepIndicator } from './Step'
 import { Steps } from './Steps'
 import { GasPriceCard } from '@/lib/shared/hooks/useGasPrice'
-import { GqlChain } from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain } from '@/lib/modules/tokens/SupportedChains'
+
 import { useThemeColorMode } from '@/lib/shared/services/chakra/useThemeColorMode'
 import { TransactionStepsResponse } from '../useTransactionSteps'
 

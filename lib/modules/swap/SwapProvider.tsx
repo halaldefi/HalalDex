@@ -2,7 +2,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 
 import { getNetworkConfig } from '@/lib/config/app.config'
-import { GqlChain, GqlSorSwapType, GqlToken } from '@/lib/shared/services/api/generated/graphql'
+import { GqlSorSwapType } from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain, GqlToken } from '@/lib/modules/tokens/SupportedChains'
 import { useMandatoryContext } from '@/lib/shared/utils/contexts'
 import { useReactiveVar } from '@apollo/client'
 import { PropsWithChildren, createContext, useEffect, useMemo, useState } from 'react'

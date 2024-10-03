@@ -5,7 +5,7 @@ import {
   SimulateSwapInputs,
   SimulateSwapResponse0x,
 } from '../swap.types'
-import { GqlToken } from '@/lib/shared/services/api/generated/graphql'
+import { GqlToken } from '@/lib/modules/tokens/SupportedChains'
 
 /**
  * SwapHandler is an interface that defines the methods that must be implemented by a handler.

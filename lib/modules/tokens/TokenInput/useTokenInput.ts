@@ -1,4 +1,4 @@
-import { GqlToken } from '@/lib/shared/services/api/generated/graphql'
+import { GqlToken } from '@/lib/modules/tokens/SupportedChains'
 import { Numberish, bn } from '@/lib/shared/utils/numbers'
 import { ChangeEvent } from 'react'
 import { useTokenBalances } from '../TokenBalancesProvider'

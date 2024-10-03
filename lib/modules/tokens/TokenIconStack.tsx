@@ -1,4 +1,4 @@
-import { GqlChain, GqlToken } from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain, GqlToken } from '@/lib/modules/tokens/SupportedChains'
 import { Box, HStack, StackProps } from '@chakra-ui/react'
 import { TokenIcon } from './TokenIcon'
 

@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { getNetworkConfig } from '@/lib/config/app.config'
-import { GqlChain, GqlToken } from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain, GqlToken } from '@/lib/modules/tokens/SupportedChains'
 import { HStack, Tag, Text, Wrap, WrapItem } from '@chakra-ui/react'
 import { useTokens } from '../TokensProvider'
 import { useMemo } from 'react'

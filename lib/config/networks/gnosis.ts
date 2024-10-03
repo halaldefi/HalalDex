@@ -1,4 +1,5 @@
-import { GqlChain } from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain } from '@/lib/modules/tokens/SupportedChains'
+
 import { NetworkConfig } from '../config.types'
 import { convertHexToLowerCase } from '@/lib/shared/utils/objects'
 import { CSP_ISSUE_POOL_IDS } from '@/lib/shared/data/csp-issue'

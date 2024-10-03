@@ -7,7 +7,9 @@ import {
 } from '../swap.types'
 import { formatUnits } from 'viem'
 import qs from 'qs'
-import { GqlChain, GqlSorSwapType, GqlToken } from '@/lib/shared/services/api/generated/graphql'
+import { GqlSorSwapType } from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain, GqlToken } from '@/lib/modules/tokens/SupportedChains'
+
 import { getChainId } from '@/lib/config/app.config'
 import { useTokens } from '../../tokens/TokensProvider'
 import BigNumber from 'bignumber.js'

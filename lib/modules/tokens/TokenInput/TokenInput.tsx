@@ -16,7 +16,7 @@ import {
   forwardRef,
   useTheme,
 } from '@chakra-ui/react'
-import { GqlChain, GqlToken } from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain, GqlToken } from '@/lib/modules/tokens/SupportedChains'
 import { useTokens } from '../TokensProvider'
 import { useTokenBalances } from '../TokenBalancesProvider'
 import { useTokenInput } from './useTokenInput'

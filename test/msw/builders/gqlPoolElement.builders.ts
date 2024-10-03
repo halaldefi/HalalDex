@@ -11,7 +11,6 @@ import {
   someTokenExpandedMock,
 } from '@/lib/modules/tokens/__mocks__/token.builders'
 import {
-  GqlChain,
   GqlPoolElement,
   GqlPoolNestingType,
   GqlPoolTokenDetail,
@@ -19,6 +18,8 @@ import {
   GqlPoolType,
   GqlPoolWeighted,
 } from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain } from '@/lib/modules/tokens/SupportedChains'
+
 import { DeepPartial } from '@apollo/client/utilities'
 import { mock } from 'vitest-mock-extended'
 import { aGqlStakingMock } from './gqlStaking.builders'

@@ -3,12 +3,13 @@ import {
   GetTokenPricesQuery,
   GetTokensQuery,
   GetTokensQueryVariables,
-  GqlChain,
   GqlPoolToken,
   GqlPoolTokenDetail,
   GqlPoolTokenExpanded,
   GqlTokenPrice,
 } from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain } from '@/lib/modules/tokens/SupportedChains'
+
 import {
   FakeTokenSymbol,
   allFakeGqlTokens,

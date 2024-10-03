@@ -1,6 +1,6 @@
 'use client'
 
-import { GqlToken } from '@/lib/shared/services/api/generated/graphql'
+import { GqlToken } from '@/lib/modules/tokens/SupportedChains'
 import { useMandatoryContext } from '@/lib/shared/utils/contexts'
 import { PropsWithChildren, createContext, useState } from 'react'
 import { Address } from 'viem'

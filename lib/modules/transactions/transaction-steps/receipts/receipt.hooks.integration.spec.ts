@@ -3,7 +3,8 @@ import { waitFor } from '@testing-library/react'
 
 import { getGqlChain } from '@/lib/config/app.config'
 import { polAddress } from '@/lib/debug-helpers'
-import { GqlChain } from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain } from '@/lib/modules/tokens/SupportedChains'
+
 import { Address, Hash } from 'viem'
 import { polygon } from 'viem/chains'
 import { useAddLiquidityReceipt, useRemoveLiquidityReceipt, useSwapReceipt } from './receipt.hooks'

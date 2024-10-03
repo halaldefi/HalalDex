@@ -1,4 +1,5 @@
-import { GqlChain } from '@/lib/shared/services/api/generated/graphql'
+import { GqlChain } from '@/lib/modules/tokens/SupportedChains'
+
 import { invert } from 'lodash'
 
 // URL slug for each chain
@@ -22,14 +23,7 @@ export const chainToSlugMap: Record<GqlChain, ChainSlug> = {
   [GqlChain.Mainnet]: ChainSlug.Ethereum,
   [GqlChain.Arbitrum]: ChainSlug.Arbitrum,
   [GqlChain.Polygon]: ChainSlug.Polygon,
-  [GqlChain.Avalanche]: ChainSlug.Avalanche,
-  [GqlChain.Fantom]: ChainSlug.Fantom,
   [GqlChain.Base]: ChainSlug.Base,
-  [GqlChain.Optimism]: ChainSlug.Optimisim,
-  [GqlChain.Zkevm]: ChainSlug.Zkevm,
-  [GqlChain.Gnosis]: ChainSlug.Gnosis,
   [GqlChain.Sepolia]: ChainSlug.Sepolia,
-  [GqlChain.Mode]: ChainSlug.Mode,
-  [GqlChain.Fraxtal]: ChainSlug.Fraxtal,
 }
 export const slugToChainMap = invert(chainToSlugMap) as Record<ChainSlug, GqlChain>
