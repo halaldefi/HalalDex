@@ -1,7 +1,5 @@
 import { GqlChain } from '@/lib/shared/services/api/generated/graphql'
 import { NetworkConfig } from '../config.types'
-import { convertHexToLowerCase } from '@/lib/shared/utils/objects'
-import { CSP_ISSUE_POOL_IDS } from '@/lib/shared/data/csp-issue'
 
 const networkConfig: NetworkConfig = {
   chainId: 137,
